@@ -1,0 +1,2065 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-HAM-CLOCK</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .coffee-link {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 9999;
+            color: #e0e0e0;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 8px;
+            animation: coffeePulseWeight 1s steps(1, end) infinite;
+        }
+        @keyframes coffeePulseWeight {
+            0%, 49% { font-weight: 500; }
+            50%, 100% { font-weight: 800; }
+        }
+        .coffee-link:hover {
+            background: #3a3a3a;
+        }
+        .app-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #e0e0e0;
+            letter-spacing: 1px;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            color: #e0e0e0;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .nav-btn.active {
+            background: #4a4a4a;
+            border-color: #666;
+        }
+        .nav-btn:hover {
+            background: #3a3a3a;
+        }
+        .lang-switch {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        .lang-link {
+            color: #e0e0e0;
+            text-decoration: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+        }
+        .lang-link.active {
+            border-color: #666;
+            background: #3a3a3a;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .cyd-container {
+            background: #2d2d1e;
+            border: 8px solid #1a1a0a;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        #aprs-page .cyd-container {
+            max-width: 864px; /* 720px * 1.2 = 864px (20% wider) */
+        }
+        .cyd-screen {
+            background: #f5f5dc;
+            color: #000;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            min-height: 400px;
+            overflow-x: auto;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            gap: 5px;
+        }
+        .btn {
+            padding: 8px 15px;
+            background: #4a4a4a;
+            border: 1px solid #666;
+            color: #e0e0e0;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .btn.active {
+            background: #6a6a4a;
+            border-color: #888;
+        }
+        .btn:hover {
+            background: #5a5a4a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            table-layout: fixed;
+        }
+        th {
+            background: #d4d4a4;
+            color: #000;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #000;
+        }
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #aaa;
+        }
+        th, td {
+            word-break: break-word;
+        }
+        tr:nth-child(even) {
+            background: #f0f0d0;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #3a3a2a;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .continent-filters {
+            margin-top: 10px;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        .continent-filters .title {
+            margin-bottom: 8px;
+            color: #e0e0e0;
+        }
+        .continent-filters .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .continent-filters label {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            margin: 0;
+            color: #e0e0e0;
+        }
+        .continent-filters input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+            margin: 0;
+            accent-color: #6a6a4a;
+        }
+        .config-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .config-section {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .config-section h3 {
+            color: #e0e0e0;
+            margin: 0 0 15px 0;
+            padding: 0;
+            border: none;
+            font-size: 18px;
+            border-bottom: 2px solid #4a4a4a;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #e0e0e0;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #6a6a4a;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        small {
+            display: block;
+            margin-top: 6px;
+            color: #888;
+            font-size: 12px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+        h3 {
+            color: #e0e0e0;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-top: 1px solid #444;
+            padding-top: 15px;
+        }
+        .save-btn {
+            padding: 12px 30px;
+            background: #4a6a4a;
+            border: none;
+            color: #e0e0e0;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background: #5a7a5a;
+        }
+        .manual-container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .manual-content {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .app-title {
+                font-size: 22px;
+            }
+            .nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            .lang-switch {
+                width: 100%;
+                justify-content: center;
+                margin-top: 6px;
+            }
+            .cyd-container {
+                padding: 12px;
+                border-width: 6px;
+            }
+            .cyd-screen {
+                padding: 10px;
+                min-height: 300px;
+            }
+            .controls {
+                gap: 6px;
+            }
+            .control-group {
+                flex-wrap: wrap;
+            }
+            .btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            table {
+                font-size: 12px;
+            }
+            th {
+                padding: 6px 6px;
+            }
+            td {
+                padding: 4px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="coffee-link" href="https://buycoffee.to/esp32hamclock" target="_blank" rel="noopener noreferrer">If you like it, BUY ME A COFFEE</a>
+    <div class="app-title">ESP32-HAM-CLOCK</div>
+    <div class="nav">
+        <button class="nav-btn active" onclick="showPage('dxspot')">DXSPOT</button>
+        <button class="nav-btn" onclick="showPage('pota')">POTA</button>
+        <button class="nav-btn" onclick="showPage('hamalert')">HAMALERT</button>
+        <button class="nav-btn" onclick="showPage('aprs')">APRS</button>
+        <button class="nav-btn" onclick="showPage('alert')">ALERT</button>
+        <button class="nav-btn" onclick="showPage('tft')">TFT Screen</button>
+        <button class="nav-btn" onclick="showPage('config')">Settings</button>
+        <button class="nav-btn" onclick="showPage('manual')">Manual</button>
+        <div class="lang-switch">
+            <a class="lang-link active" href="/indexEN.html">EN</a>
+            <span>|</span>
+            <a class="lang-link" href="/index.html">PL</a>
+        </div>
+    </div>
+    
+    <div id="dxspot-page" class="page active">
+        <div class="cyd-container">
+            <h2 style="color: #e0e0e0; margin-bottom: 12px; text-align: center;">DX Cluster</h2>
+            <div class="cyd-screen">
+                <div class="controls">
+                    <div class="control-group">
+                        <span style="margin-right: 10px; line-height: 35px;">Mode:</span>
+                        <button class="btn active" onclick="setMode('All')">ALL</button>
+                        <button class="btn" onclick="setMode('CW')">CW</button>
+                        <button class="btn" onclick="setMode('SSB')">SSB</button>
+                        <button class="btn" onclick="setMode('FT8FT4')">FT8/FT4</button>
+                    </div>
+                    <div class="control-group">
+                        <span style="margin-right: 10px; line-height: 35px;">Band:</span>
+                        <button class="btn" onclick="setBand('160m')">160m</button>
+                        <button class="btn" onclick="setBand('80m')">80m</button>
+                        <button class="btn" onclick="setBand('40m')">40m</button>
+                        <button class="btn" onclick="setBand('20m')">20m</button>
+                        <button class="btn" onclick="setBand('17m')">17m</button>
+                        <button class="btn" onclick="setBand('15m')">15m</button>
+                        <button class="btn" onclick="setBand('12m')">12m</button>
+                        <button class="btn" onclick="setBand('10m')">10m</button>
+                        <button class="btn active" onclick="setBand('All')">All</button>
+                    </div>
+                </div>
+                <table id="spots-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Callsign</th>
+                            <th>Frequency</th>
+                            <th>Mode</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spots-tbody">
+                    </tbody>
+                </table>
+                <div class="status" id="status">Waiting for data...</div>
+            </div>
+        </div>
+        
+        <!-- Filters below the "virtual display" (outside cyd-container) -->
+        <div class="continent-filters" style="max-width: 600px; margin: 12px auto 0;">
+            <div class="title">Spot from:</div>
+            <div class="row">
+                <label><input type="checkbox" id="cont_af" checked>AF</label>
+                <label><input type="checkbox" id="cont_an" checked>AN</label>
+                <label><input type="checkbox" id="cont_as" checked>AS</label>
+                <label><input type="checkbox" id="cont_eu" checked>EU</label>
+                <label><input type="checkbox" id="cont_na" checked>NA</label>
+                <label><input type="checkbox" id="cont_sa" checked>SA</label>
+                <label><input type="checkbox" id="cont_oc" checked>OC</label>
+            </div>
+        </div>
+    </div>
+    
+    <div id="aprs-page" class="page">
+        <div class="cyd-container">
+            <h2 style="color: #e0e0e0; margin-bottom: 12px; text-align: center;">APRS</h2>
+            <div class="cyd-screen">
+                <table id="aprs-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Callsign</th>
+                            <th>Symbol</th>
+                            <th>Distance</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aprs-tbody">
+                    </tbody>
+                </table>
+                <div class="status" id="aprs-status">Waiting for APRS data...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tft-page" class="page">
+        <div class="config-form">
+            <h2 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">TFT Settings</h2>
+
+            <div class="config-section">
+                <h3>💡 TFT Backlight</h3>
+                <div class="form-group">
+                    <label>Brightness (0-100%): <span id="tft_backlight_value">100</span>%</label>
+                    <input type="range" id="tft_backlight" name="tft_backlight" min="0" max="100" value="100">
+                    <small>Set backlight brightness for all screens</small>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🌐 TFT Language</h3>
+                <div class="form-group">
+                    <label>TFT UI language:</label>
+                    <select id="tft_lang" name="tft_lang">
+                        <option value="pl">Polish</option>
+                        <option value="en">English</option>
+                    </select>
+                    <small>Changes the TFT on-screen labels (requires restart)</small>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>📋 Table Size</h3>
+                <div class="form-group">
+                    <label>Select table size:</label>
+                    <select id="table_size" name="table_size">
+                        <option value="normal">Normal</option>
+                        <option value="enlarged">Enlarged</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🖥️ TFT Screens (order)</h3>
+                <small>Page 1 shows first after power-up. You can set pages 1-11 or disable them (OFF).</small>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="tft_auto_switch" name="tft_auto_switch" style="width: auto;">
+                        <span>AUTO-SWITCH</span>
+                    </label>
+                    <small>Automatically switches TFT screen one step to the right.</small>
+                </div>
+                <div class="form-group">
+                    <label>SWITCH-TIME (seconds):</label>
+                    <input type="number" id="tft_switch_time_sec" name="tft_switch_time_sec" min="1" max="3600" step="1" value="30">
+                    <small>Interval between automatic screen switches (1-3600 s).</small>
+                </div>
+                <div class="form-group">
+                    <label>Page 1:</label>
+                    <select id="screen_slot_1">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 2:</label>
+                    <select id="screen_slot_2">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 3:</label>
+                    <select id="screen_slot_3">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 4:</label>
+                    <select id="screen_slot_4">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 5:</label>
+                    <select id="screen_slot_5">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 6:</label>
+                    <select id="screen_slot_6">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 7:</label>
+                    <select id="screen_slot_7">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 8:</label>
+                    <select id="screen_slot_8">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 9:</label>
+                    <select id="screen_slot_9">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 10:</label>
+                    <select id="screen_slot_10">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page 11:</label>
+                    <select id="screen_slot_11">
+                        <option value="hamclock">HAM CLOCK</option>
+                        <option value="dxcluster">DX CLUSTER</option>
+                        <option value="aprsis">APRS-IS</option>
+                        <option value="aprsradar">APRS RADAR</option>
+                        <option value="bandinfo">BAND INFO</option>
+                        <option value="sunspots">SUN SPOTS</option>
+                        <option value="weather">WEATHER</option>
+                        <option value="weatherforecast">WEATHER FORECAST</option>
+                        <option value="pota">POTA</option>
+                        <option value="hamalert">HAMALERT</option>
+                        <option value="matrix">MATRIX</option>
+                        <option value="off">OFF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>🎯 TFT Calibration</h3>
+                <div class="form-group">
+                    <label>TFT Rotation (0-3):</label>
+                    <select id="tft_rotation" name="tft_rotation">
+                        <option value="0">0 - Portrait</option>
+                        <option value="1">1 - Landscape 90° (right)</option>
+                        <option value="2">2 - Portrait 180° (inverted)</option>
+                        <option value="3">3 - Landscape 270° (left)</option>
+                    </select>
+                    <small>TFT_eSPI rotation (default: 1, requires restart)</small>
+                </div>
+                 <div class="form-group">
+                        <label>TFT Color Inversion:</label>
+                        <select id="tft_invert" name="tft_invert">
+                            <option value="0">Normal</option>
+                            <option value="1">Inverted</option>
+                        </select>
+                        <small>Controls tft.invertDisplay() (default matches User_Setup.h)</small>
+                </div>
+                <div class="form-group">
+                    <label>Touch Rotation (0-3):</label>
+                    <select id="touch_rotation" name="touch_rotation">
+                        <option value="0">0 - Portrait</option>
+                        <option value="1">1 - Landscape 90° (right)</option>
+                        <option value="2">2 - Portrait 180° (inverted)</option>
+                        <option value="3">3 - Landscape 270° (left)</option>
+                    </select>
+                    <small>XPT2046_Touchscreen rotation (default: 1)</small>
+                </div>
+                <div class="form-group">
+                    <label>Manual axis swap:</label>
+                    <select id="touch_swap_mode" name="touch_swap_mode">
+                        <option value="none">None (NONE)</option>
+                        <option value="xy">Swap X↔Y (SWAP XY)</option>
+                        <option value="x">Invert X (INVERT X)</option>
+                        <option value="y">Invert Y (INVERT Y)</option>
+                        <option value="both">Invert X and Y (INVERT BOTH - 180°)</option>
+                        <option value="rot90cw">Rotate 90° right (SWAP XY + INVERT X)</option>
+                        <option value="rot90ccw">Rotate 90° left (SWAP XY + INVERT Y)</option>
+                        <option value="xy_both">Swap + invert both (SWAP XY + INVERT BOTH)</option>
+                    </select>
+                    <small>Manual touch orientation (or use calibration switch on CALL_TFT)</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn" onclick="resetTftRotation()" style="background: #d44; border-color: #a22; color: #fff;">🔄 Reset TFT rotation (DEFAULT)</button>
+                    <small>Sets TFT Rotation to 1 and restarts the device</small>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn" onclick="resetTouchCalibration()" style="background: #d44; border-color: #a22; color: #fff;">🔄 Reset touch calibration (DEFAULT)</button>
+                    <small>Restores touch calibration defaults from firmware</small>
+                </div>
+            </div>
+
+            <button type="button" class="save-btn" onclick="saveConfig()">💾 Save TFT Settings</button>
+        </div>
+    </div>
+
+    <div id="alert-page" class="page">
+        <div class="config-form">
+            <h2 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">ALERT</h2>
+            <div class="config-section">
+                <h3>🚨 APRS ALERT</h3>
+                <div class="form-group">
+                    <label>Watch callsigns list (comma-separated):</label>
+                    <input type="text" id="aprs_alert" name="aprs_alert" placeholder="SQ3NIK-9, SP3YOR, SP3KON-7">
+                    <small>Single CSV field. Maximum 20 entries. Example: SQ3NIK-9, SP3YOR, SP3KON* (trailing * = any SSID)</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="aprs_alert_enabled" name="aprs_alert_enabled" style="width: auto;" checked>
+                        <span>Enable APRS ALERT notifications</span>
+                    </label>
+                    <small>When disabled, the watch list remains saved but alerts are not reported.</small>
+                </div>
+                <div class="form-group">
+                    <label>Minimum alert interval for the same station (seconds):</label>
+                    <input type="number" id="aprs_alert_min_sec" name="aprs_alert_min_sec" value="300" min="0" max="86400" step="1">
+                    <small>0 = alert on every receive. Range: 0-86400 seconds.</small>
+                </div>
+                <div class="form-group">
+                    <label>APRS ALERT TFT display time (seconds):</label>
+                    <input type="number" id="aprs_alert_screen_sec" name="aprs_alert_screen_sec" value="5" min="1" max="60" step="1">
+                    <small>Range: 1-60 seconds. Default: 5 seconds.</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="aprs_alert_nearby_enabled" name="aprs_alert_nearby_enabled" style="width: auto;" checked>
+                        <span>Enable nearby mobile station detection (-7 and -9)</span>
+                    </label>
+                    <small>Applies only to APRS stations with SSID -7 or -9 (e.g. SP3KON-9, SQ3NIK-7).</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="aprs_alert_wx_enabled" name="aprs_alert_wx_enabled" style="width: auto;">
+                        <span>Enable APRS weather station (WX) notifications</span>
+                    </label>
+                    <small>When enabled, APRS ALERT will also detect stations marked with WX symbol and show an alert with decoded weather data.</small>
+                </div>
+                <div class="form-group">
+                    <label>ALERT_Distance for mobile stations (km):</label>
+                    <input type="number" id="aprs_alert_distance_km" name="aprs_alert_distance_km" value="1" min="0.1" max="500" step="0.1">
+                    <small>Alert triggers for mobile stations at or below this distance.</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="enable_led_alert" name="enable_led_alert" style="width: auto;" checked>
+                        <span>Enable LED optical alert (Blue LED - GPIO17)</span>
+                    </label>
+                    <small>Turns APRS ALERT LED blinking on or off. You can solder a 3V buzzer.</small>
+                </div>
+                <div class="form-group">
+                    <label>LED alert duration (ms):</label>
+                    <input type="number" id="led_alert_duration_ms" name="led_alert_duration_ms" value="5000" min="100" max="60000" step="100">
+                    <small>Range: 100-60000 ms. Default: 5000 ms.</small>
+                </div>
+                <div class="form-group">
+                    <label>LED blink pace (ms):</label>
+                    <input type="number" id="led_alert_blink_ms" name="led_alert_blink_ms" value="500" min="50" max="5000" step="10">
+                    <small>Range: 50-5000 ms. Default: 500 ms.</small>
+                </div>
+            </div>
+            <button type="button" class="save-btn" onclick="saveConfig()">💾 Save ALERT</button>
+        </div>
+    </div>
+    
+    <div id="config-page" class="page">
+        <div class="config-form">
+            <h2 style="color: #e0e0e0; margin-bottom: 20px; text-align: center;">ESP32-HAM-CLOCK Configuration</h2>
+            <form id="config-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+                
+                <!-- Section: WiFi Connection -->
+                <div class="config-section">
+                    <h3>📶 WiFi Connection</h3>
+                    <div class="form-group">
+                        <label>WiFi SSID:</label>
+                        <input type="text" id="wifi_ssid" name="wifi_ssid" required>
+                        <small>WiFi network name the device should connect to</small>
+                    </div>
+                    <div class="form-group">
+                        <label>WiFi Password:</label>
+                        <input type="password" id="wifi_pass" name="wifi_pass" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" spellcheck="false">
+                        <small>WiFi password (leave empty for open networks)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>WiFi SSID (fallback):</label>
+                        <input type="text" id="wifi_ssid2" name="wifi_ssid2" placeholder="optional">
+                        <small>Secondary SSID used when the primary is unavailable</small>
+                    </div>
+                    <div class="form-group">
+                        <label>WiFi Password (fallback):</label>
+                        <input type="password" id="wifi_pass2" name="wifi_pass2" placeholder="optional" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" spellcheck="false">
+                        <small>Password for the fallback network (leave empty for open network)</small>
+                    </div>
+                </div>
+                
+                
+                
+                <!-- Section: DX Cluster -->
+                <div class="config-section">
+                    <h3>📻 DX Cluster</h3>
+                    <div class="form-group">
+                        <label>DX Cluster Host:</label>
+                        <input type="text" id="cluster_host" name="cluster_host" required>
+                        <small>DX Cluster server address (e.g. dxc.metronet.pl or dxspots.com)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>DX Cluster Port:</label>
+                        <input type="number" id="cluster_port" name="cluster_port" required>
+                        <small>DX Cluster server port (usually 23 for Telnet)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="cluster_noann" name="cluster_noann" style="width: auto;">
+                            <span>Disable announcements (set/noann)</span>
+                        </label>
+                        <small>Hides administrative announcements from the cluster</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="cluster_nowwv" name="cluster_nowwv" style="width: auto;">
+                            <span>Disable WWV (set/nowwv)</span>
+                        </label>
+                        <small>Hides WWV bulletins (atomic clocks)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="cluster_nowcy" name="cluster_nowcy" style="width: auto;">
+                            <span>Disable WCY (set/nowcy)</span>
+                        </label>
+                        <small>Hides WCY bulletins (atomic clocks)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="cluster_usefilters" name="cluster_usefilters" style="width: auto;">
+                            <span>Use filters (set/filter)</span>
+                        </label>
+                        <small>Enables advanced spot filters (requires commands below)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Filter commands (one per line):</label>
+                        <textarea id="cluster_filters" name="cluster_filters" rows="4" placeholder="set/filter k,ve/pass&#10;set/filter dxbm/pass hf&#10;set/filter dxbm/reject 6-cw,6-ssb,6-fm" style="font-family: monospace; font-size: 12px;"></textarea>
+                        <small>Filter commands for CC-Cluster. Examples: set/filter k,ve/pass (K and VE only), set/filter dxbm/pass hf (HF only), set/filter dxbm/reject 6-cw,6-ssb,6-fm (reject 6m)</small>
+                    </div>
+                </div>
+
+                <!-- Section: POTA Cluster (screen7) -->
+                <div class="config-section">
+                    <h3>🏕️ POTA Cluster</h3>
+                    <div class="form-group">
+                        <label>External POTA API Link:</label>
+                        <input type="text" id="pota_api_url" name="pota_api_url" value="https://api.pota.app/v1/spots">
+                        <small>Address used by the backend to fetch POTA spots (HTTP JSON)</small>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h3>🛰️ HAMALERT</h3>
+                    <div class="form-group">
+                        <label>Telnet Host:</label>
+                        <input type="text" id="hamalert_host" name="hamalert_host" value="hamalert.org" required>
+                        <small>Default: hamalert.org</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Telnet Port:</label>
+                        <input type="number" id="hamalert_port" name="hamalert_port" value="7300" min="1" max="65535" required>
+                        <small>Default: 7300</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Login:</label>
+                        <input type="text" id="hamalert_login" name="hamalert_login" required>
+                        <small>HamAlert account login for Telnet authentication</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="hamalert_password" name="hamalert_password" required autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" spellcheck="false">
+                        <small>Required for HamAlert Telnet login</small>
+                    </div>
+                </div>
+                
+                <!-- Section: Your Station -->
+                <div class="config-section">
+                    <h3>📡 Your Station</h3>
+                    <div class="form-group">
+                        <label>Your Callsign:</label>
+                        <input type="text" id="user_callsign" name="user_callsign" placeholder="e.g. SP3KON">
+                        <small>Your callsign used to log in to DX Cluster</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Locator (Maidenhead):</label>
+                        <input type="text" id="user_locator" name="user_locator" placeholder="e.g. JO82LK">
+                        <small>Maidenhead locator (4-6 chars) used to calculate spot distances</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Time Zone (UTC offset hours):</label>
+                        <input type="number" id="timezone" name="timezone" min="-12" max="14" step="1" value="0">
+                        <small>Hour offset from UTC (e.g. Poland: 1)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Latitude:</label>
+                        <input type="number" step="0.000001" id="user_lat" name="user_lat" placeholder="e.g. 52.4064">
+                        <small>Latitude in decimal format (like Google Maps). Example: 52.4064 for Warsaw</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude:</label>
+                        <input type="number" step="0.000001" id="user_lon" name="user_lon" placeholder="e.g. 16.9252">
+                        <small>Longitude in decimal format (like Google Maps). Example: 16.9252 for Warsaw</small>
+                    </div>
+                </div>
+                
+                <!-- Section: QRZ.com -->
+                <div class="config-section">
+                    <h3>🔍 QRZ.com</h3>
+                    <div class="form-group">
+                        <label>QRZ.com Username (XML API):</label>
+                        <input type="text" id="qrz_user" name="qrz_user" placeholder="login QRZ">
+                        <small>QRZ.com API username (optional, for extra callsign info)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>QRZ.com Password (XML API):</label>
+                        <input type="password" id="qrz_pass" name="qrz_pass" placeholder="QRZ password" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" spellcheck="false">
+                        <small>QRZ.com API password (optional)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>QRZ Status:</label>
+                        <input type="text" id="qrz_status" name="qrz_status" readonly style="background: #1a1a1a; color: #888;">
+                        <small>QRZ.com connection status (auto-updated)</small>
+                    </div>
+                </div>
+                
+                <!-- Section: OpenWeather -->
+                <div class="config-section">
+                    <h3>🌤️ OpenWeather</h3>
+                    <div class="form-group">
+                        <label>OpenWeather API Key:</label>
+                        <input type="password" id="weather_key" name="weather_key" placeholder="API key" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" spellcheck="false">
+                        <small>API key from openweathermap.org (required to show weather and forecast on TFT screens)</small>
+                    </div>
+                </div>
+                
+                <!-- Section: KiwiSDR -->
+                <div class="config-section">
+                    <h3>📡 KiwiSDR</h3>
+                    <div class="form-group">
+                        <label>KiwiSDR URL:</label>
+                        <input type="text" id="openwebrx_url" name="openwebrx_url" placeholder="">
+                        <small>Enter the KiwiSDR address you want to listen to stations from, e.g. http://okno.ddns.net:8073/</small>
+                        <small><a href="http://kiwisdr.com/.public/" target="_blank" rel="noopener noreferrer" style="color: #6a6a4a;">List of available KiwiSDR: http://kiwisdr.com/.public/</a></small>
+                    </div>
+                </div>
+                
+                <!-- Section: APRS-IS -->
+                <div class="config-section">
+                    <h3>📻 APRS-IS</h3>
+                    <div class="form-group">
+                        <label>APRS-IS Host:</label>
+                        <input type="text" id="aprs_host" name="aprs_host" placeholder="rotate.aprs2.net">
+                        <small>APRS-IS server address (e.g. rotate.aprs2.net)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS-IS Port:</label>
+                        <input type="number" id="aprs_port" name="aprs_port" placeholder="14580" min="1" max="65535">
+                        <small>APRS-IS server port (default 14580)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS Callsign:</label>
+                        <input type="text" id="aprs_callsign" name="aprs_callsign" placeholder="sp3kon">
+                        <small>Your callsign used to log in to APRS-IS</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS SSID (0-15):</label>
+                        <select id="aprs_ssid" name="aprs_ssid">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            <option value="11">11</option>
+                            <option value="12">12</option>
+                            <option value="13">13</option>
+                            <option value="14">14</option>
+                            <option value="15">15</option>
+                        </select>
+                        <small>SSID appended to callsign for APRS beacon TX. 0 = no suffix.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS Passcode:</label>
+                        <input type="number" id="aprs_passcode" name="aprs_passcode" placeholder="23735" min="0" max="99999">
+                        <small>APRS-IS passcode (generate at aprs.org)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Filter radius (km):</label>
+                        <input type="number" id="aprs_radius" name="aprs_radius" placeholder="50" min="0" max="50">
+                        <small>APRS station filter radius in kilometers (0-50 km). Filter and all distance calculations use GPS coordinates from the "Your Station" section (format xx.xxxxxx)</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="aprs_beacon" name="aprs_beacon">
+                            Send beacon to APRS-IS
+                        </label>
+                        <small>Periodically sends your position (TCPIP*). Requires configured coordinates.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS symbol (2 chars):</label>
+                        <input type="text" id="aprs_symbol" name="aprs_symbol" maxlength="2" placeholder="/-">
+                        <small>First char is table (e.g. / or \), second is symbol (e.g. -). Used in the beacon.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>APRS Comment:</label>
+                        <input type="text" id="aprs_comment" name="aprs_comment" maxlength="43" placeholder="My comment">
+                        <small>Max 43 ASCII chars. Used on every beacon; the first and every fifth beacon uses the ESP32-HAM-CLOCK project link.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Beacon interval (minutes):</label>
+                        <input type="number" id="aprs_interval_min" name="aprs_interval_min" min="1" max="180" placeholder="29">
+                        <small>Gap between consecutive beacons after the first (which goes at 1 minute). Range 1-180 min.</small>
+                    </div>
+                </div>
+                
+                <button type="submit" class="save-btn">💾 Save Configuration</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="pota-page" class="page">
+        <div class="cyd-container">
+            <h2 style="color: #e0e0e0; margin-bottom: 12px; text-align: center;">POTA</h2>
+            <div class="cyd-screen">
+                <div class="controls">
+                    <div class="control-group">
+                        <button class="btn" onclick="setPotaMode('All', this)" id="pota_mode_all">All</button>
+                        <button class="btn" onclick="setPotaMode('SSB', this)" id="pota_mode_ssb">SSB</button>
+                        <button class="btn" onclick="setPotaMode('CW', this)" id="pota_mode_cw">CW</button>
+                        <button class="btn" onclick="setPotaMode('FT8FT4', this)" id="pota_mode_ft8">FT8/FT4</button>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn" onclick="setPotaBand('All', this)" id="pota_band_all">All</button>
+                        <button class="btn" onclick="setPotaBand('160m', this)">160m</button>
+                        <button class="btn" onclick="setPotaBand('80m', this)">80m</button>
+                        <button class="btn" onclick="setPotaBand('40m', this)">40m</button>
+                        <button class="btn" onclick="setPotaBand('20m', this)">20m</button>
+                        <button class="btn" onclick="setPotaBand('15m', this)">15m</button>
+                        <button class="btn" onclick="setPotaBand('10m', this)">10m</button>
+                    </div>
+                </div>
+                <table id="pota-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Callsign</th>
+                            <th>Frequency</th>
+                            <th>Mode</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pota-tbody"></tbody>
+                </table>
+                <div class="status" id="pota-status">Waiting for POTA data...</div>
+                <div style="margin-top:20px;">
+                    <b>Raw POTA API data:</b>
+                    <pre id="pota-raw-json" style="background:#222; color:#b0ffb0; font-size:11px; max-height:300px; overflow:auto; border:1px solid #444; padding:8px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hamalert-page" class="page">
+        <div class="cyd-container">
+            <h2 style="color: #e0e0e0; margin-bottom: 12px; text-align: center;">HAMALERT</h2>
+            <div class="cyd-screen">
+                <div class="controls">
+                    <div class="control-group">
+                        <button class="btn" onclick="setHamalertMode('All', this)" id="hama_mode_all">All</button>
+                        <button class="btn" onclick="setHamalertMode('SSB', this)" id="hama_mode_ssb">SSB</button>
+                        <button class="btn" onclick="setHamalertMode('CW', this)" id="hama_mode_cw">CW</button>
+                        <button class="btn" onclick="setHamalertMode('FT8FT4', this)" id="hama_mode_ft8">FT8/FT4</button>
+                    </div>
+                    <div class="control-group hamalert-band-group">
+                        <button class="btn" onclick="setHamalertBand('All', this)" id="hama_band_all">All</button>
+                        <button class="btn" onclick="setHamalertBand('160m', this)">160m</button>
+                        <button class="btn" onclick="setHamalertBand('80m', this)">80m</button>
+                        <button class="btn" onclick="setHamalertBand('60m', this)">60m</button>
+                        <button class="btn" onclick="setHamalertBand('40m', this)">40m</button>
+                        <button class="btn" onclick="setHamalertBand('30m', this)">30m</button>
+                        <button class="btn" onclick="setHamalertBand('20m', this)">20m</button>
+                    </div>
+                    <div class="control-group hamalert-band-group">
+                        <button class="btn" onclick="setHamalertBand('17m', this)">17m</button>
+                        <button class="btn" onclick="setHamalertBand('15m', this)">15m</button>
+                        <button class="btn" onclick="setHamalertBand('12m', this)">12m</button>
+                        <button class="btn" onclick="setHamalertBand('10m', this)">10m</button>
+                        <button class="btn" onclick="setHamalertBand('VHF', this)">VHF</button>
+                        <button class="btn" onclick="setHamalertBand('UHF', this)">UHF</button>
+                        <button class="btn" onclick="setHamalertBand('SHF', this)">SHF</button>
+                    </div>
+                </div>
+                <table id="hamalert-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Callsign</th>
+                            <th>Frequency</th>
+                            <th>Mode</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hamalert-tbody"></tbody>
+                </table>
+                <div class="status" id="hamalert-status">Waiting for HAMALERT data...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="manual-page" class="page">
+        <div class="manual-container">
+            <div class="manual-content" id="manual-content">Loading manual...</div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMode = "All";
+        let currentBand = "All";
+        let allSpots = [];
+        let continentFilters = {
+            AF: true, AN: true, AS: true, EU: true, NA: true, SA: true, OC: true
+        };
+
+        const getSpotContinent = (spotter) => {
+            // Prefix heuristic (incomplete but useful for filtering).
+            // Returns: "AF","AN","AS","EU","NA","SA","OC" or null (unknown).
+            if (!spotter) return null;
+            let s = ("" + spotter).toUpperCase().trim();
+            // Remove suffixes like "-#" etc.
+            s = s.replace(/[^A-Z0-9\/]/g, "");
+
+            // Antarctica
+            if (s.startsWith("KC4") || s.startsWith("VP8") || s.startsWith("CE9")) return "AN";
+
+            // Oceania (VK, ZL, KH6, DU/.. etc.)
+            if (s.startsWith("VK") || s.startsWith("ZL") || s.startsWith("KH6") || s.startsWith("ZK") || s.startsWith("FO") || s.startsWith("FK") || s.startsWith("DU") || s.startsWith("YJ") || s.startsWith("3D2")) return "OC";
+
+            // North America
+            if (s.startsWith("K") || s.startsWith("N") || s.startsWith("W") || s.startsWith("VE") || s.startsWith("VA") || s.startsWith("VY") || s.startsWith("XE") || s.startsWith("CM") || s.startsWith("CO") || s.startsWith("KP")) return "NA";
+
+            // South America
+            if (s.startsWith("LU") || s.startsWith("LW") || s.startsWith("PY") || s.startsWith("CX") || s.startsWith("CE") || s.startsWith("OA") || s.startsWith("YV") || s.startsWith("HK") || s.startsWith("PJ")) return "SA";
+
+            // Africa
+            if (s.startsWith("ZS") || s.startsWith("ZR") || s.startsWith("ZD7") || s.startsWith("ZD8") || s.startsWith("5H") || s.startsWith("5R") || s.startsWith("CN") || s.startsWith("3V") || s.startsWith("SU") || s.startsWith("7Q") || s.startsWith("D4") || s.startsWith("C5") || s.startsWith("A2") || s.startsWith("V5")) return "AF";
+
+            // Asia
+            if (s.startsWith("JA") || s.startsWith("JE") || s.startsWith("JF") || s.startsWith("JG") || s.startsWith("JR") || s.startsWith("JH") || s.startsWith("BY") || s.startsWith("BH") || s.startsWith("BA") || s.startsWith("VR") || s.startsWith("VU") || s.startsWith("9M") || s.startsWith("HS") || s.startsWith("HL") || s.startsWith("BV") || s.startsWith("UA9") || s.startsWith("UN") || s.startsWith("EX") || s.startsWith("EY") || s.startsWith("ER") || s.startsWith("4X")) return "AS";
+
+            // Europe (many prefixes, a few common ones)
+            if (s.startsWith("SP") || s.startsWith("SN") || s.startsWith("SQ") || s.startsWith("HF") || s.startsWith("DL") || s.startsWith("F") || s.startsWith("G") || s.startsWith("GM") || s.startsWith("EI") || s.startsWith("I") || s.startsWith("EA") || s.startsWith("OK") || s.startsWith("OM") || s.startsWith("HA") || s.startsWith("OE") || s.startsWith("PA") || s.startsWith("ON") || s.startsWith("SM") || s.startsWith("OH") || s.startsWith("OZ") || s.startsWith("LA") || s.startsWith("LY") || s.startsWith("YL") || s.startsWith("UA") || s.startsWith("UR") || s.startsWith("YO") || s.startsWith("SV") || s.startsWith("LZ") || s.startsWith("9A") || s.startsWith("S5")) return "EU";
+
+            return null;
+        }
+
+        const readContinentFilters = () => {
+            continentFilters.AF = !!document.getElementById('cont_af')?.checked;
+            continentFilters.AN = !!document.getElementById('cont_an')?.checked;
+            continentFilters.AS = !!document.getElementById('cont_as')?.checked;
+            continentFilters.EU = !!document.getElementById('cont_eu')?.checked;
+            continentFilters.NA = !!document.getElementById('cont_na')?.checked;
+            continentFilters.SA = !!document.getElementById('cont_sa')?.checked;
+            continentFilters.OC = !!document.getElementById('cont_oc')?.checked;
+        }
+        
+        let manualLoaded = false;
+        const manualUrl = "/manual.txt";
+
+        const loadManual = () => {
+            if (manualLoaded) return;
+            fetch(manualUrl)
+                .then(response => response.ok ? response.text() : Promise.reject())
+                .then(text => {
+                    document.getElementById('manual-content').textContent = text.trim();
+                    manualLoaded = true;
+                })
+                .catch(() => {
+                    document.getElementById('manual-content').textContent = "Failed to load manual.";
+                });
+        };
+
+        const showPage = (page) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(`showPage('${page}')`)) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+            document.getElementById(page + '-page').classList.add('active');
+            if (page === "config" || page === "tft" || page === "alert") {
+                loadConfig();
+            } else if (page === "aprs") {
+                loadAPRS();
+            } else if (page === "pota") {
+                loadPOTA();
+            } else if (page === "hamalert") {
+                loadHamalert();
+            } else if (page === "manual") {
+                loadManual();
+            }
+        }
+        
+        const setMode = (mode) => {
+            currentMode = mode;
+            document.querySelectorAll('.control-group:first-child .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateTable();
+        }
+        
+        const setBand = (band) => {
+            currentBand = band;
+            document.querySelectorAll('.control-group:last-child .btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            updateTable();
+        }
+
+        const bandPlan = [
+            {min: 1810, max: 2000, band: "160m", mode: "lsb"},
+            {min: 3500, max: 3800, band: "80m", mode: "lsb"},
+            {min: 5351.5, max: 5366.5, band: "60m", mode: "usb"},
+            {min: 7000, max: 7200, band: "40m", mode: "lsb"},
+            {min: 10100, max: 10150, band: "30m", mode: "usb"},
+            {min: 14000, max: 14350, band: "20m", mode: "usb"},
+            {min: 18068, max: 18168, band: "17m", mode: "usb"},
+            {min: 21000, max: 21450, band: "15m", mode: "usb"},
+            {min: 24890, max: 24990, band: "12m", mode: "usb"},
+            {min: 28000, max: 29700, band: "10m", mode: "usb"}
+        ];
+        let openWebRxBase = "";
+
+        const normalizeOpenWebRx = (url) => {
+            if (!url) return "";
+            let u = ("" + url).trim();
+            if (!u) return "";
+            u = u.replace(/#.*$/, "");
+            u = u.replace(/\/+$/, "");
+            return u;
+        };
+
+        const getBandFromFreq = (freqKHz) => {
+            for (const band of bandPlan) {
+                if (freqKHz >= band.min && freqKHz <= band.max) {
+                    return band.band;
+                }
+            }
+            if (freqKHz >= 30000 && freqKHz < 300000) return "VHF";
+            if (freqKHz >= 300000 && freqKHz < 3000000) return "UHF";
+            if (freqKHz >= 3000000 && freqKHz < 30000000) return "SHF";
+            return "Other";
+        };
+
+        const getSdrModulation = (freqKHz) => {
+            for (const band of bandPlan) {
+                if (freqKHz >= band.min && freqKHz <= band.max) {
+                    return band.mode;
+                }
+            }
+            return "usb";
+        }
+
+        const setOpenWebRxBaseFromInput = () => {
+            const input = document.getElementById('openwebrx_url');
+            openWebRxBase = normalizeOpenWebRx(input ? input.value : "");
+        };
+
+        const getQrzLink = (callsign) => {
+            const call = (callsign || "").trim();
+            return call ? "https://www.qrz.com/db/" + encodeURIComponent(call) : "#";
+        }
+
+        const getSdrLink = (freqKHz) => {
+            if (!openWebRxBase || openWebRxBase.trim() === "") return "#";
+            const mod = getSdrModulation(freqKHz);
+            // WebSDR accepts fractional kHz, e.g. 14303.55usb
+            let freqStr = Number(freqKHz || 0).toFixed(2);
+            freqStr = freqStr.replace(/\.0+$/, "").replace(/\.([1-9]*?)0+$/, ".$1");
+            return openWebRxBase + "/?tune=" + freqStr + mod;
+        }
+        
+        const updateTable = () => {
+            const tbody = document.getElementById('spots-tbody');
+            tbody.innerHTML = "";
+            
+            const filtered = allSpots.filter(spot => {
+                if (currentMode !== "All") {
+                    const mode = (spot.mode || "").toUpperCase();
+                    if (currentMode === "FT8FT4") {
+                        if (mode !== "FT8" && mode !== "FT4") return false;
+                    } else if (mode !== currentMode.toUpperCase()) {
+                        return false;
+                    }
+                }
+                if (currentBand !== "All") {
+                    if (!spot.frequency) return false;
+                    const band = getBandFromFreq(spot.frequency);
+                    if (band !== currentBand) return false;
+                }
+
+                // Spotter continent (if unknown, do not filter out)
+                const cont = getSpotContinent(spot.spotter);
+                if (cont && continentFilters[cont] === false) return false;
+                return true;
+            });
+            
+            // Show all filtered spots (max 50)
+            filtered.forEach(spot => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = spot.time || "----Z";
+                const callCell = row.insertCell(1);
+                if (spot.callsign) {
+                    const link = document.createElement("a");
+                    link.href = getQrzLink(spot.callsign);
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = spot.callsign;
+                    callCell.appendChild(link);
+                } else {
+                    callCell.textContent = "-";
+                }
+
+                const freqCell = row.insertCell(2);
+                if (spot.frequency) {
+                    const freqText = (spot.frequency / 1000).toFixed(3) + " MHz";
+                    const sdrLink = getSdrLink(spot.frequency);
+                    if (sdrLink && sdrLink !== "#" && openWebRxBase && openWebRxBase.trim() !== "") {
+                        const link = document.createElement("a");
+                        link.href = sdrLink;
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.textContent = freqText;
+                        freqCell.appendChild(link);
+                    } else {
+                        freqCell.textContent = freqText;
+                    }
+                } else {
+                    freqCell.textContent = "-";
+                }
+                row.insertCell(3).textContent = spot.mode || "-";
+                row.insertCell(4).textContent = (spot.country && spot.country.trim()) ? spot.country : "-";
+            });
+            
+            document.getElementById('status').textContent = "Showing " + filtered.length + " spots";
+        }
+        
+        const screenOptionsDefault = ["hamclock","dxcluster","aprsis","aprsradar","bandinfo","sunspots","weather","weatherforecast","pota","hamalert","matrix"];
+
+        const applyScreenOrderToUI = (order) => {
+            const arr = Array.isArray(order) && order.length ? order : screenOptionsDefault;
+            for (let i = 0; i < 11; i++) {
+                const sel = document.getElementById(`screen_slot_${i+1}`);
+                if (!sel) continue;
+                sel.value = arr[i] || screenOptionsDefault[i] || "off";
+            }
+        };
+
+        const readScreenOrderFromUI = () => {
+            const arr = [];
+            for (let i = 0; i < 11; i++) {
+                const sel = document.getElementById(`screen_slot_${i+1}`);
+                arr.push(sel ? sel.value : "off");
+            }
+            return arr;
+        };
+
+        const normalizeAprsAlertInput = (value) => {
+            const src = (value || "").toUpperCase();
+            const parts = src.split(',');
+            const cleaned = [];
+            for (let i = 0; i < parts.length; i++) {
+                let token = parts[i].trim();
+                if (!token) continue;
+                const wildcardAnySsid = token.endsWith('*');
+                if (wildcardAnySsid) {
+                    token = token.slice(0, -1);
+                }
+                token = token.replace(/[^A-Z0-9\-\/]/g, '');
+                if (wildcardAnySsid && token) {
+                    token += '*';
+                }
+                if (!token) continue;
+                cleaned.push(token);
+                if (cleaned.length >= 20) break;
+            }
+            return cleaned.join(',');
+        };
+
+        const loadConfig = () => {
+            fetch('/api/config')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('wifi_ssid').value = data.wifi_ssid || "";
+                    document.getElementById('wifi_pass').value = data.wifi_pass || "";
+                    document.getElementById('wifi_ssid2').value = data.wifi_ssid2 || "";
+                    document.getElementById('wifi_pass2').value = data.wifi_pass2 || "";
+                    const backlightValue = (data.tft_backlight !== undefined && data.tft_backlight !== null) ? data.tft_backlight : 100;
+                    document.getElementById('tft_backlight').value = backlightValue;
+                    document.getElementById('tft_backlight_value').textContent = backlightValue;
+                    const tftLangSelect = document.getElementById('tft_lang');
+                    if (tftLangSelect) {
+                        tftLangSelect.value = data.tft_lang || "pl";
+                    }
+                    const tableSizeSelect = document.getElementById('table_size');
+                    if (tableSizeSelect) {
+                        tableSizeSelect.value = data.table_size || "normal";
+                    }
+                    const tftRotationValue = (data.tft_rotation !== undefined && data.tft_rotation !== null) ? data.tft_rotation : 1;
+                    document.getElementById('tft_rotation').value = tftRotationValue;
+                    const tftInvertValue = (data.tft_invert === true || data.tft_invert === false) ? (data.tft_invert ? "1" : "0") : "1";
+                    document.getElementById('tft_invert').value = tftInvertValue;
+                    document.getElementById('tft_auto_switch').checked = data.tft_auto_switch === true;
+                    const tftSwitchTimeValue = parseInt(data.tft_switch_time_sec, 10);
+                    document.getElementById('tft_switch_time_sec').value = Number.isFinite(tftSwitchTimeValue) ? Math.min(3600, Math.max(1, tftSwitchTimeValue)) : 30;
+                    const touchRotationValue = (data.touch_rotation !== undefined && data.touch_rotation !== null) ? data.touch_rotation : 1;
+                    document.getElementById('touch_rotation').value = touchRotationValue;
+                    document.getElementById('touch_swap_mode').value = data.touch_swap_mode || "none";
+                    document.getElementById('cluster_host').value = data.cluster_host || "";
+                    document.getElementById('cluster_port').value = data.cluster_port || "";
+                    document.getElementById('pota_api_url').value = data.pota_api_url || "https://api.pota.app/v1/spots";
+                    document.getElementById('hamalert_host').value = data.hamalert_host || "hamalert.org";
+                    document.getElementById('hamalert_port').value = (data.hamalert_port !== undefined && data.hamalert_port !== null) ? data.hamalert_port : 7300;
+                    document.getElementById('hamalert_login').value = data.hamalert_login || "";
+                    document.getElementById('hamalert_password').value = data.hamalert_password || "";
+                    document.getElementById('user_callsign').value = data.user_callsign || "";
+                    document.getElementById('user_locator').value = data.user_locator || "";
+                    const timezoneValue = (data.timezone !== undefined && data.timezone !== null) ? data.timezone : 0;
+                    document.getElementById('timezone').value = timezoneValue;
+                    // Use !== null/undefined instead of || "" to preserve 0 values.
+                    if (data.user_lat !== null && data.user_lat !== undefined) {
+                        document.getElementById('user_lat').value = data.user_lat;
+                    } else {
+                        document.getElementById('user_lat').value = "";
+                    }
+                    if (data.user_lon !== null && data.user_lon !== undefined) {
+                        document.getElementById('user_lon').value = data.user_lon;
+                    } else {
+                        document.getElementById('user_lon').value = "";
+                    }
+                    document.getElementById('qrz_user').value = data.qrz_user || "";
+                    document.getElementById('qrz_pass').value = data.qrz_pass || "";
+                    document.getElementById('weather_key').value = data.weather_key || "";
+                    document.getElementById('openwebrx_url').value = data.openwebrx_url || "";
+                    openWebRxBase = normalizeOpenWebRx(data.openwebrx_url);
+                    document.getElementById('qrz_status').value = data.qrz_status || "";
+                    document.getElementById('cluster_noann').checked = data.cluster_noann !== false;
+                    document.getElementById('cluster_nowwv').checked = data.cluster_nowwv !== false;
+                    document.getElementById('cluster_nowcy').checked = data.cluster_nowcy !== false;
+                    document.getElementById('cluster_usefilters').checked = data.cluster_usefilters === true;
+                    document.getElementById('cluster_filters').value = data.cluster_filters || "";
+                    // APRS-IS
+                    document.getElementById('aprs_host').value = data.aprs_host || "";
+                    document.getElementById('aprs_port').value = (data.aprs_port !== undefined && data.aprs_port !== null) ? data.aprs_port : "";
+                    document.getElementById('aprs_callsign').value = data.aprs_callsign || "";
+                    const aprsSsidFromApi = parseInt(data.aprs_ssid, 10);
+                    const aprsSsidSafe = Number.isFinite(aprsSsidFromApi) ? Math.min(15, Math.max(0, aprsSsidFromApi)) : 0;
+                    document.getElementById('aprs_ssid').value = String(aprsSsidSafe);
+                    if (data.aprs_passcode !== undefined && data.aprs_passcode !== null) {
+                        document.getElementById('aprs_passcode').value = data.aprs_passcode;
+                    } else {
+                        document.getElementById('aprs_passcode').value = "";
+                    }
+                    if (data.aprs_radius !== undefined && data.aprs_radius !== null) {
+                        document.getElementById('aprs_radius').value = data.aprs_radius;
+                    } else {
+                        document.getElementById('aprs_radius').value = "";
+                    }
+                    const aprsBeacon = (data.aprs_beacon === undefined || data.aprs_beacon === null) ? true : !!data.aprs_beacon;
+                    document.getElementById('aprs_beacon').checked = aprsBeacon;
+                    document.getElementById('aprs_symbol').value = data.aprs_symbol || "/-";
+                    document.getElementById('aprs_comment').value = data.aprs_comment || "";
+                    document.getElementById('aprs_alert').value = data.aprs_alert || "";
+                    document.getElementById('aprs_alert_enabled').checked = data.aprs_alert_enabled !== false;
+                    document.getElementById('enable_led_alert').checked = data.enable_led_alert !== false;
+                    const ledDurationFromApi = parseInt(data.led_alert_duration_ms, 10);
+                    const ledDurationSafe = Number.isFinite(ledDurationFromApi) ? Math.min(60000, Math.max(100, ledDurationFromApi)) : 5000;
+                    document.getElementById('led_alert_duration_ms').value = ledDurationSafe;
+                    const ledBlinkFromApi = parseInt(data.led_alert_blink_ms, 10);
+                    const ledBlinkSafe = Number.isFinite(ledBlinkFromApi) ? Math.min(5000, Math.max(50, ledBlinkFromApi)) : 500;
+                    document.getElementById('led_alert_blink_ms').value = ledBlinkSafe;
+                    const alertMinSecFromApi = parseInt(data.aprs_alert_min_sec, 10);
+                    const alertMinSecSafe = Number.isFinite(alertMinSecFromApi) ? Math.min(86400, Math.max(0, alertMinSecFromApi)) : 300;
+                    document.getElementById('aprs_alert_min_sec').value = alertMinSecSafe;
+                    const alertScreenSecFromApi = parseInt(data.aprs_alert_screen_sec, 10);
+                    const alertScreenSecSafe = Number.isFinite(alertScreenSecFromApi) ? Math.min(60, Math.max(1, alertScreenSecFromApi)) : 5;
+                    document.getElementById('aprs_alert_screen_sec').value = alertScreenSecSafe;
+                    document.getElementById('aprs_alert_nearby_enabled').checked = data.aprs_alert_nearby_enabled !== false;
+                    document.getElementById('aprs_alert_wx_enabled').checked = data.aprs_alert_wx_enabled === true;
+                    const alertDistanceFromApi = parseFloat(data.aprs_alert_distance_km);
+                    const alertDistanceSafe = Number.isFinite(alertDistanceFromApi) ? Math.min(500, Math.max(0.1, alertDistanceFromApi)) : 1.0;
+                    document.getElementById('aprs_alert_distance_km').value = alertDistanceSafe;
+                    const intervalFromApi = parseInt(data.aprs_interval_min, 10);
+                    const intervalSafe = Number.isFinite(intervalFromApi) ? Math.min(180, Math.max(1, intervalFromApi)) : 29;
+                    document.getElementById('aprs_interval_min').value = intervalSafe;
+                    applyScreenOrderToUI(data.screen_order);
+                })
+                .catch(err => console.log("Error loading configuration:", err));
+        };
+
+        // --- POTA TAB LOGIC ---
+        let allPOTASpots = [];
+        let potaModeFilter = "All";
+        let potaBandFilter = "All";
+
+        function setPotaMode(mode, btn) {
+            potaModeFilter = mode;
+            document.querySelectorAll('#pota-page .control-group:first-child .btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updatePOTATable();
+        }
+
+        function setPotaBand(band, btn) {
+            potaBandFilter = band;
+            document.querySelectorAll('#pota-page .control-group:last-child .btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updatePOTATable();
+        }
+
+        function updatePOTATable() {
+            const tbody = document.getElementById('pota-tbody');
+            tbody.innerHTML = "";
+            if (!Array.isArray(allPOTASpots) || allPOTASpots.length === 0) {
+                document.getElementById('pota-status').textContent = "No POTA data.";
+                return;
+            }
+            // Sort descending by spot time
+            const sorted = allPOTASpots.slice().sort((a, b) => {
+                const ta = a.spotTime ? new Date(a.spotTime).getTime() : (a.time ? new Date(a.time).getTime() : 0);
+                const tb = b.spotTime ? new Date(b.spotTime).getTime() : (b.time ? new Date(b.time).getTime() : 0);
+                return tb - ta;
+            });
+            const filtered = sorted.filter(spot => {
+                if (potaModeFilter !== "All") {
+                    const mode = (spot.mode || "").toUpperCase();
+                    if (potaModeFilter === "FT8FT4") {
+                        if (mode !== "FT8" && mode !== "FT4") return false;
+                    } else if (mode !== potaModeFilter.toUpperCase()) {
+                        return false;
+                    }
+                }
+                if (potaBandFilter !== "All") {
+                    const freqMHz = parseFloat(spot.frequency);
+                    if (!isFinite(freqMHz) || freqMHz <= 0) return false;
+                    const band = getBandFromFreq(freqMHz * 1000);
+                    if (band !== potaBandFilter) return false;
+                }
+                return true;
+            });
+            filtered.slice(0, 50).forEach(spot => {
+                const row = tbody.insertRow();
+                const tStr = spot.spotTime || spot.time || "";
+                row.insertCell(0).textContent = tStr ? new Date(tStr).toLocaleTimeString() : "-";
+
+                // Callsign with QRZ link
+                const callCell = row.insertCell(1);
+                const call = spot.activator || spot.callsign || "";
+                if (call) {
+                    const link = document.createElement("a");
+                    link.href = getQrzLink(call);
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = call;
+                    callCell.appendChild(link);
+                } else {
+                    callCell.textContent = "-";
+                }
+
+                // Frequency with WebSDR link
+                const freqCell = row.insertCell(2);
+                let freq = (spot.frequency !== undefined && spot.frequency !== null) ? parseFloat(spot.frequency) : NaN;
+                if (isFinite(freq) && freq > 0) {
+                    const freqText = freq.toFixed(3) + " MHz";
+                    const freqKHz = freq * 1000.0;
+                    const sdrLink = getSdrLink(freqKHz);
+                    if (sdrLink && sdrLink !== "#" && openWebRxBase && openWebRxBase.trim() !== "") {
+                        const link = document.createElement("a");
+                        link.href = sdrLink;
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.textContent = freqText;
+                        freqCell.appendChild(link);
+                    } else {
+                        freqCell.textContent = freqText;
+                    }
+                } else {
+                    freqCell.textContent = "-";
+                }
+
+                row.insertCell(3).textContent = spot.mode || "-";
+                row.insertCell(4).textContent = spot.country || "-";
+            });
+            document.getElementById('pota-status').textContent = "Showing " + filtered.length + " POTA spots";
+        }
+
+        function loadPOTA() {
+            document.getElementById('pota-status').textContent = "Fetching POTA data...";
+            fetch('/api/pota')
+                .then(r => r.json())
+                .then(data => {
+                    const spots = Array.isArray(data.spots) ? data.spots : [];
+                    allPOTASpots = spots;
+                    if (spots.length > 0) {
+                        console.log('First POTA spot (backend):', spots[0]);
+                        const debugDiv = document.getElementById('pota-raw-json');
+                        if (debugDiv) {
+                            debugDiv.textContent = JSON.stringify(data, null, 2) + "\nFirst spot:\n" + JSON.stringify(spots[0], null, 2);
+                        }
+                    } else {
+                        const debugDiv = document.getElementById('pota-raw-json');
+                        if (debugDiv) debugDiv.textContent = JSON.stringify(data, null, 2);
+                    }
+                    updatePOTATable();
+                })
+                .catch(err => {
+                    document.getElementById('pota-status').textContent = "Failed to fetch POTA data.";
+                    allPOTASpots = [];
+                    updatePOTATable();
+                    const rawJson = document.getElementById('pota-raw-json');
+                    if (rawJson) {
+                        rawJson.textContent = "Failed to fetch or parse data.";
+                    }
+                });
+        }
+
+        let allHamalertSpots = [];
+        let hamalertModeFilter = "All";
+        let hamalertBandFilter = "All";
+
+        function setHamalertMode(mode, btn) {
+            hamalertModeFilter = mode;
+            document.querySelectorAll('#hamalert-page .control-group:first-child .btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updateHamalertTable();
+        }
+
+        function setHamalertBand(band, btn) {
+            hamalertBandFilter = band;
+            document.querySelectorAll('#hamalert-page .hamalert-band-group .btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updateHamalertTable();
+        }
+
+        function formatHamalertTime(value) {
+            const raw = (value === undefined || value === null) ? "" : String(value).trim();
+            if (!raw) return "-";
+            if (/^\d{2}:\d{2}$/.test(raw)) return raw;
+            if (/^\d{2}:\d{2}Z$/i.test(raw)) return raw.substring(0, 5);
+            if (/^\d{4}Z$/i.test(raw)) return raw.substring(0, 2) + ":" + raw.substring(2, 4);
+            const dt = new Date(raw);
+            if (!Number.isNaN(dt.getTime())) {
+                return dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            return raw;
+        }
+
+        function updateHamalertTable() {
+            const tbody = document.getElementById('hamalert-tbody');
+            tbody.innerHTML = "";
+            if (!Array.isArray(allHamalertSpots) || allHamalertSpots.length === 0) {
+                document.getElementById('hamalert-status').textContent = "No HAMALERT data.";
+                return;
+            }
+            const filtered = allHamalertSpots.filter(spot => {
+                if (hamalertModeFilter !== "All") {
+                    const mode = (spot.mode || "").toUpperCase();
+                    if (hamalertModeFilter === "FT8FT4") {
+                        if (mode !== "FT8" && mode !== "FT4") return false;
+                    } else if (mode !== hamalertModeFilter.toUpperCase()) {
+                        return false;
+                    }
+                }
+                if (hamalertBandFilter !== "All") {
+                    const freqMHz = parseFloat(spot.frequency);
+                    if (!isFinite(freqMHz) || freqMHz <= 0) return false;
+                    const band = getBandFromFreq(freqMHz * 1000);
+                    if (band !== hamalertBandFilter) return false;
+                }
+                return true;
+            });
+
+            filtered.slice(0, 50).forEach(spot => {
+                const row = tbody.insertRow();
+                const tStr = spot.spotTime || spot.time || "";
+                row.insertCell(0).textContent = formatHamalertTime(tStr);
+
+                const callCell = row.insertCell(1);
+                const call = spot.callsign || "";
+                if (call) {
+                    const link = document.createElement("a");
+                    link.href = getQrzLink(call);
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = call;
+                    callCell.appendChild(link);
+                } else {
+                    callCell.textContent = "-";
+                }
+
+                const freqCell = row.insertCell(2);
+                const freq = parseFloat(spot.frequency);
+                if (isFinite(freq) && freq > 0) {
+                    const freqText = freq.toFixed(3) + " MHz";
+                    const freqKHz = freq * 1000.0;
+                    const sdrLink = getSdrLink(freqKHz);
+                    if (sdrLink && sdrLink !== "#" && openWebRxBase && openWebRxBase.trim() !== "") {
+                        const link = document.createElement("a");
+                        link.href = sdrLink;
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.textContent = freqText;
+                        freqCell.appendChild(link);
+                    } else {
+                        freqCell.textContent = freqText;
+                    }
+                } else {
+                    freqCell.textContent = "-";
+                }
+
+                row.insertCell(3).textContent = spot.mode || "-";
+                row.insertCell(4).textContent = spot.country || "-";
+            });
+            document.getElementById('hamalert-status').textContent = "Showing " + filtered.length + " HAMALERT spots";
+        }
+
+        function loadHamalert() {
+            document.getElementById('hamalert-status').textContent = "Fetching HAMALERT data...";
+            fetch('/api/hamalert')
+                .then(r => r.json())
+                .then(data => {
+                    const spots = Array.isArray(data.spots) ? data.spots : [];
+                    allHamalertSpots = spots;
+                    const raw = document.getElementById('hamalert-raw-json');
+                    if (raw) raw.textContent = JSON.stringify(data, null, 2);
+                    updateHamalertTable();
+                })
+                .catch(() => {
+                    allHamalertSpots = [];
+                    const tbody = document.getElementById('hamalert-tbody');
+                    if (tbody) tbody.innerHTML = "";
+                    document.getElementById('hamalert-status').textContent = "Failed to fetch HAMALERT data.";
+                    const raw = document.getElementById('hamalert-raw-json');
+                    if (raw) raw.textContent = "Failed to fetch or parse data.";
+                });
+        }
+        
+        const loadSpots = () => {
+            fetch('/api/spots')
+                .then(r => r.json())
+                .then(data => {
+                    allSpots = data.spots || [];
+                    updateTable();
+                })
+                .catch(err => console.log("Error loading spots:", err));
+        }
+        
+        let allAPRSStations = [];
+        
+        const updateAPRSTable = () => {
+            const tbody = document.getElementById('aprs-tbody');
+            tbody.innerHTML = "";
+            
+            allAPRSStations.forEach(station => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = station.time || "----Z";
+                row.insertCell(1).textContent = station.callsign || "-";
+                row.insertCell(2).textContent = station.symbol || "-";
+                const distCell = row.insertCell(3);
+                if (station.hasLatLon && station.distance > 0) {
+                    distCell.textContent = Math.round(station.distance) + " km";
+                } else {
+                    distCell.textContent = "-";
+                }
+                row.insertCell(4).textContent = station.comment || "-";
+            });
+            
+            document.getElementById('aprs-status').textContent = "Showing " + allAPRSStations.length + " APRS stations";
+        }
+        
+        const loadAPRS = () => {
+            fetch('/api/aprs')
+                .then(r => r.json())
+                .then(data => {
+                    allAPRSStations = data.stations || [];
+                    updateAPRSTable();
+                })
+                .catch(err => console.log("Error loading APRS stations:", err));
+        }
+        
+        const collectConfigPayload = () => ({
+            wifi_ssid: document.getElementById('wifi_ssid').value,
+            wifi_pass: document.getElementById('wifi_pass').value,
+            wifi_ssid2: document.getElementById('wifi_ssid2').value,
+            wifi_pass2: document.getElementById('wifi_pass2').value,
+            tft_backlight: parseInt(document.getElementById('tft_backlight').value) || 100,
+            tft_lang: (document.getElementById('tft_lang') ? document.getElementById('tft_lang').value : "pl"),
+            table_size: (document.getElementById('table_size') ? document.getElementById('table_size').value : "normal"),
+            tft_rotation: (isNaN(parseInt(document.getElementById('tft_rotation').value)) ? 1 : parseInt(document.getElementById('tft_rotation').value)),
+            tft_invert: (document.getElementById('tft_invert').value === "1"),
+            tft_auto_switch: document.getElementById('tft_auto_switch').checked,
+            tft_switch_time_sec: (() => {
+                const raw = parseInt(document.getElementById('tft_switch_time_sec').value, 10);
+                if (!Number.isFinite(raw)) return 30;
+                return Math.min(3600, Math.max(1, raw));
+            })(),
+            touch_rotation: (isNaN(parseInt(document.getElementById('touch_rotation').value)) ? 1 : parseInt(document.getElementById('touch_rotation').value)),
+            touch_swap_mode: document.getElementById('touch_swap_mode').value,
+            cluster_host: document.getElementById('cluster_host').value,
+            cluster_port: parseInt(document.getElementById('cluster_port').value),
+            pota_api_url: document.getElementById('pota_api_url').value,
+            hamalert_host: document.getElementById('hamalert_host').value,
+            hamalert_port: parseInt(document.getElementById('hamalert_port').value) || 7300,
+            hamalert_login: document.getElementById('hamalert_login').value,
+            hamalert_password: document.getElementById('hamalert_password').value,
+            user_callsign: document.getElementById('user_callsign').value,
+            user_locator: document.getElementById('user_locator').value,
+            timezone: parseInt(document.getElementById('timezone').value) || 0,
+            user_lat: parseFloat(document.getElementById('user_lat').value) || 0,
+            user_lon: parseFloat(document.getElementById('user_lon').value) || 0,
+            qrz_user: document.getElementById('qrz_user').value,
+            qrz_pass: document.getElementById('qrz_pass').value,
+            weather_key: document.getElementById('weather_key').value,
+            openwebrx_url: document.getElementById('openwebrx_url').value,
+            cluster_noann: document.getElementById('cluster_noann').checked,
+            cluster_nowwv: document.getElementById('cluster_nowwv').checked,
+            cluster_nowcy: document.getElementById('cluster_nowcy').checked,
+            cluster_usefilters: document.getElementById('cluster_usefilters').checked,
+            cluster_filters: document.getElementById('cluster_filters').value,
+            aprs_host: document.getElementById('aprs_host').value,
+            aprs_port: parseInt(document.getElementById('aprs_port').value) || 14580,
+            aprs_callsign: document.getElementById('aprs_callsign').value,
+            aprs_ssid: (() => {
+                const raw = parseInt(document.getElementById('aprs_ssid').value, 10);
+                if (!Number.isFinite(raw)) return 0;
+                return Math.min(15, Math.max(0, raw));
+            })(),
+            aprs_passcode: parseInt(document.getElementById('aprs_passcode').value) || 0,
+            aprs_radius: parseInt(document.getElementById('aprs_radius').value) || 0,
+            aprs_beacon: document.getElementById('aprs_beacon').checked,
+            aprs_symbol: document.getElementById('aprs_symbol').value,
+            aprs_comment: document.getElementById('aprs_comment').value,
+            aprs_alert: normalizeAprsAlertInput(document.getElementById('aprs_alert').value),
+            aprs_alert_enabled: document.getElementById('aprs_alert_enabled').checked,
+            enable_led_alert: document.getElementById('enable_led_alert').checked,
+            led_alert_duration_ms: (() => {
+                const raw = parseInt(document.getElementById('led_alert_duration_ms').value, 10);
+                if (!Number.isFinite(raw)) return 5000;
+                return Math.min(60000, Math.max(100, raw));
+            })(),
+            led_alert_blink_ms: (() => {
+                const raw = parseInt(document.getElementById('led_alert_blink_ms').value, 10);
+                if (!Number.isFinite(raw)) return 500;
+                return Math.min(5000, Math.max(50, raw));
+            })(),
+            aprs_alert_min_sec: (() => {
+                const raw = parseInt(document.getElementById('aprs_alert_min_sec').value, 10);
+                if (!Number.isFinite(raw)) return 300;
+                return Math.min(86400, Math.max(0, raw));
+            })(),
+            aprs_alert_screen_sec: (() => {
+                const raw = parseInt(document.getElementById('aprs_alert_screen_sec').value, 10);
+                if (!Number.isFinite(raw)) return 5;
+                return Math.min(60, Math.max(1, raw));
+            })(),
+            aprs_alert_nearby_enabled: document.getElementById('aprs_alert_nearby_enabled').checked,
+            aprs_alert_wx_enabled: document.getElementById('aprs_alert_wx_enabled').checked,
+            aprs_alert_distance_km: (() => {
+                const raw = parseFloat(document.getElementById('aprs_alert_distance_km').value);
+                if (!Number.isFinite(raw)) return 1.0;
+                return Math.min(500, Math.max(0.1, raw));
+            })(),
+            aprs_interval_min: (() => {
+                const raw = parseInt(document.getElementById('aprs_interval_min').value, 10);
+                if (!Number.isFinite(raw)) return 29;
+                return Math.min(180, Math.max(1, raw));
+            })(),
+            screen_order: readScreenOrderFromUI()
+            // Note: APRS uses coordinates from "Your Station" (user_lat, user_lon)
+        });
+
+        const resetTftRotation = () => {
+            if (!confirm('Are you sure you want to reset TFT rotation to default (1)?')) {
+                return;
+            }
+            fetch('/api/reset_tft_rotation', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.action === "restart") {
+                    alert("TFT rotation reset to default. The device will restart.");
+                } else {
+                    alert("TFT rotation reset to default.");
+                }
+                loadConfig();
+            })
+            .catch(() => alert("TFT rotation reset failed"));
+        };
+
+        const resetTouchCalibration = () => {
+            if (!confirm('Are you sure you want to reset touch calibration to defaults?')) {
+                return;
+            }
+            fetch('/api/reset_touch', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(r => r.json())
+            .then(() => {
+                alert("Touch calibration reset to default values!");
+                loadConfig();
+            })
+            .catch(() => alert("Touch calibration reset failed"));
+        };
+
+        const saveConfig = () => {
+            setOpenWebRxBaseFromInput();
+            const payload = collectConfigPayload();
+            fetch('/api/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.action === "restart") {
+                    alert("Configuration saved. The device will restart and try to connect to WiFi.");
+                } else {
+                    alert("Configuration saved!");
+                }
+            })
+            .catch(() => alert("Configuration save failed"));
+        };
+
+        document.getElementById('config-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveConfig();
+        });
+
+        const backlightInput = document.getElementById('tft_backlight');
+        if (backlightInput) {
+            backlightInput.addEventListener('input', function(e) {
+                document.getElementById('tft_backlight_value').textContent = e.target.value;
+            });
+        }
+
+        const openWebRxInput = document.getElementById('openwebrx_url');
+        if (openWebRxInput) {
+            openWebRxInput.addEventListener('input', setOpenWebRxBaseFromInput);
+            openWebRxInput.addEventListener('change', setOpenWebRxBaseFromInput);
+        }
+
+        const aprsAlertInput = document.getElementById('aprs_alert');
+        if (aprsAlertInput) {
+            aprsAlertInput.addEventListener('change', function(e) {
+                e.target.value = normalizeAprsAlertInput(e.target.value);
+            });
+        }
+        
+        // Always load configuration on startup to initialize openWebRxBase for SDR links
+        loadConfig();
+        
+        // Polling - refresh every 2 seconds
+        loadSpots();
+        setInterval(loadSpots, 2000);
+        
+        // Polling APRS - refresh every 2 seconds
+        loadAPRS();
+        setInterval(loadAPRS, 2000);
+
+        // Polling POTA - refresh every 60 seconds
+        loadPOTA();
+        setInterval(loadPOTA, 60000);
+
+        // Polling HAMALERT - refresh every 60 seconds
+        loadHamalert();
+        setInterval(loadHamalert, 60000);
+
+        // Continent filters
+        ['cont_af','cont_an','cont_as','cont_eu','cont_na','cont_sa','cont_oc'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', function() {
+                    readContinentFilters();
+                    updateTable();
+                });
+            }
+        });
+        readContinentFilters();
+    </script>
+    <div style="margin: 20px auto 10px; max-width: 980px; padding: 10px 16px; color: #b0b0b0; font-size: 12px; text-align: center;">
+        Software designed and built by Konrad Wiśniewski SP3KON (with the help of AI).<br>
+        Current software version: ESP32-HAM-CLOCK v1.2 (04.03.2026).<br>
+        For questions, contact: sp3kon@gmail.com
+    </div>
+</body>
+</html>
+
+
+
