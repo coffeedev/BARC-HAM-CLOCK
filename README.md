@@ -1,131 +1,95 @@
-# ESP32-HAM-CLOCK
+# ESP32 HAM CLOCK / DX Cluster (EN)
 
-ESP32 HAM CLOCK to zegar i terminal DX/APRS dla ESP32 (głównie CYD ESP32-2432S028), z wyświetlaczem TFT 2.4" i równoległym panelem WWW.
+ESP32 HAM CLOCK is a clock and DX Cluster terminal for the ESP32-2432S028 (CYD) module with a 2.4" touch TFT. It connects to DX Cluster (telnet), POTA (API), APRS-IS, pulls weather and solar/propagation data, and exposes both a TFT UI and a web UI (TFT emulation). Touch is used for navigation, filters, brightness menu, and calibration. Settings are stored in NVS; LittleFS holds fonts and web assets; `User_Setup.h` is copied into TFT_eSPI before build.
 
-Projekt łączy:
-- DX Cluster (telnet),
-- POTA (API),
-- HAMALERT (telnet),
-- APRS-IS (RX + opcjonalny TX beacon),
-- pogodę i prognozę (OpenWeather),
-- dane propagacyjne/solar.
+## Features
 
-Ustawienia są zapisywane w NVS, a zasoby WWW/fonty są trzymane w LittleFS.
+- DX Cluster via telnet (filters, login, keepalive)
+- POTA spots from public API (HTTP)
+- APRS-IS: frame reception + optional TX beacon (TCP), `r/lat/lon/km` radius filter, symbol and comment
+- Weather + forecast + PM2.5/PM10 from OpenWeather
+- Propagation data (hamqsl solarxml)
+- TFT screens: Clock (UTC/local), DX, POTA, APRS, HF bands, propagation, weather, matrix clock
+- XPT2046 touch: navigation, filter menus, long-press brightness menu; touch/TFT rotation and calibration
+- HTTP config portal (AP fallback when no WiFi); preferences saved in NVS
+- LittleFS for fonts and HTML/JS/CSS; web UI mirrors the TFT
+- Pre-build extra script copies `User_Setup.h` into TFT_eSPI
 
-## Najważniejsze funkcje
+## Hardware
 
-- DX Cluster: filtry, logowanie, keepalive.
-- POTA: spoty z publicznego API.
-- HAMALERT: pobieranie spotów przez telnet.
-- APRS-IS:
-  - odbiór ramek,
-  - filtr `#filter r/lat/lon/radius`,
-  - opcjonalny TX beacon,
-  - APRS ALERT (lista znaków, nearby/WX, LED).
-- OpenWeather:
-  - pogoda bieżąca,
-  - prognoza,
-  - PM2.5/PM10.
-- TFT + dotyk XPT2046:
-  - menu filtrów,
-  - jasność,
-  - rotacje,
-  - kalibracja,
-  - auto-switch ekranów.
-- Panel WWW:
-  - zakładki `DXSPOT`, `POTA`, `HAMALERT`, `APRS`, `ALERT`, `Ekran TFT`, `Ustawienia`, `Instrukcja`.
-- Build helper:
-  - `pre:copy_user_setup.py` automatycznie kopiuje `User_Setup.h` do biblioteki TFT_eSPI.
+- Board: ESP32-2432S028 (ESP32 WROOM, 240x320 ILI9341 TFT, XPT2046 touch, onboard backlight)
+- Alternative: other ESP32 without TFT (use web UI), or external ILI9341
 
-## Sprzęt
+### Pins (ESP32-2432S028)
 
-- Główny target: `ESP32-2432S028` (CYD), TFT ILI9341 240x320, dotyk XPT2046.
-- Alternatywnie: inne ESP32 (także bez TFT, wtedy obsługa przez WWW).
+ILI9341 display:
+- TFT_SCLK: GPIO14
+- TFT_MOSI: GPIO13
+- TFT_MISO: GPIO12
+- TFT_CS: GPIO15
+- TFT_DC: GPIO2
+- TFT_RST: GPIO4
+- TFT_BL: GPIO21 (PWM, default 5 kHz, 8-bit)
 
-### Piny (CYD ESP32-2432S028)
+XPT2046 touch:
+- TOUCH_CS: GPIO33
+- TOUCH_IRQ: GPIO36
+- TOUCH_MOSI: GPIO32
+- TOUCH_MISO: GPIO39
+- TOUCH_CLK: GPIO25
 
-Wyświetlacz ILI9341:
-- `TFT_SCLK` GPIO14
-- `TFT_MOSI` GPIO13
-- `TFT_MISO` GPIO12
-- `TFT_CS` GPIO15
-- `TFT_DC` GPIO2
-- `TFT_RST` GPIO4
-- `TFT_BL` GPIO21 (PWM, domyślnie 5 kHz, 8 bit)
+Other:
+- Backlight PWM channel 0
+- No onboard buttons; navigation by touch (bottom corners = screen change)
 
-Dotyk XPT2046:
-- `TOUCH_CS` GPIO33
-- `TOUCH_IRQ` GPIO36
-- `TOUCH_MOSI` GPIO32
-- `TOUCH_MISO` GPIO39
-- `TOUCH_CLK` GPIO25
+## PlatformIO Environments
 
-## Środowiska PlatformIO
+- `esp32-2432s028`: ESP32 Dev + TFT_eSPI + XPT2046; FS: LittleFS; `ENABLE_TFT_DISPLAY`
 
-- `esp32-2432s028` (domyślne)
-- `esp32-ili9341-38pin`
+Key libs (see `platformio.ini`): ArduinoJson 7, TFT_eSPI, XPT2046_Touchscreen.
 
-Kluczowe biblioteki: ArduinoJson 7, TFT_eSPI, XPT2046_Touchscreen.
+## Build (PlatformIO)
 
-## Build i upload
+1. `platformio run -e esp32-2432s028` (default env) or choose another in `platformio.ini`
+2. Pre-build `pre:copy_user_setup.py` copies `User_Setup.h` into TFT_eSPI
+3. Flash firmware; optionally `pio run -t uploadfs` for LittleFS (`data/`)
 
-1. Build firmware:
-   `platformio run -e esp32-2432s028`
-2. Upload firmware:
-   `platformio run -e esp32-2432s028 -t upload`
-3. Upload LittleFS (`data/`):
-   `platformio run -e esp32-2432s028 -t uploadfs`
+## First-Time Setup
 
-## Pierwsze uruchomienie
+1. If no saved WiFi, AP starts: SSID `ESP32-HAM-CLOCK`, password `1234567890`
+2. Open `http://192.168.4.1` → Config tab
+3. Set WiFi (primary/secondary), DX Cluster host/port, callsign, locator, OpenWeather key, optional QRZ, TFT settings (brightness, language, rotation, calibration)
+4. APRS beacon: first beacon is sent about 1 minute after startup, next beacons use the configured interval; user comment is used on each beacon, while the first and every fifth beacon uses the ESP32-HAM-CLOCK project link
+5. Save; the board reboots and joins WiFi STA
 
-1. Jeśli brak zapisanej konfiguracji WiFi, urządzenie uruchomi AP:
-   SSID `ESP32-HAM-CLOCK`, hasło `1234567890`.
-2. Wejdź na `http://192.168.4.1` (tryb AP) lub na IP pokazane na TFT.
-3. W zakładce `Ustawienia` skonfiguruj:
-   WiFi,
-   DX,
-   POTA,
-   HAMALERT,
-   APRS,
-   OpenWeather,
-   QRZ,
-   parametry TFT/dotyku.
-4. Zapis ustawień powoduje restart modułu.
+### APRS-IS (details)
 
-## Ekrany TFT
+- Web config fields: host, port, callsign, SSID (0-15), passcode, filter radius (1-50 km), beacon enable, symbol (2 chars), comment (ASCII max 43), beacon interval (1-180 min)
+- After login, APRS-IS filter is sent as `#filter r/lat/lon/radius` using coordinates from “Your station”
+- If user coordinates are not set, filter and distance calculations use fallback `52.40, 16.92`
+- TX beacon requires valid coordinates and a valid APRS callsign (not `NOCALL`)
+- APRS station buffer limits: 20 entries for web UI and 10 entries on TFT screen
 
-Projekt obsługuje 11 ekranów (kolejność konfigurowalna, każdy slot może być `OFF`):
+## TFT Screens (short)
 
-1. HAM CLOCK
-2. DX CLUSTER
-3. APRS-IS
-4. APRS RADAR
-5. BAND INFO
-6. SUN SPOTS
-7. WEATHER
-8. WEATHER FORECAST
-9. POTA CLUSTER
-10. HAMALERT
-11. MATRIX
+- Clock (UTC/local, date, IP, brightness, language)
+- DX Cluster (list, mode/band filters)
+- APRS-IS (stations, sorting)
+- Band Info (HF day/night)
+- Sun Spots / propagation
+- Weather (current + details, PM2.5/PM10)
+- POTA (filters, time-ordered)
+- Matrix Clock
 
-## Dokumentacja użytkownika
+## Network Cadence
 
-- PL: `INSTRUKCJA.txt` oraz `data/instrukcja.txt`
-- EN: `data/manual.txt` oraz `readmeEN.md`
+- WiFi: auto-reconnect to last SSID (STA); AP only when no config or at cold start without WiFi
+- DX Cluster reconnect: min every 20 s; keepalive CRLF every 30 s
+- Weather: every 10 min; on error every 2 min; each cycle makes 3 HTTPS calls (current/forecast/air)
+- Propagation: every 60 min; on error retry after 5 min
+- POTA API: every 180 s
+- QRZ lookup: every 3 s when DX/POTA screen active, otherwise every 10 s (with retry limits)
 
-## Szybkie troubleshooting
+## License
 
-- WWW nie otwiera się:
-  sprawdź, czy jesteś w tej samej sieci, albo połącz się z AP i użyj `192.168.4.1`.
-- Brak stylów/pusta strona:
-  wgraj ponownie LittleFS (`uploadfs`), sprawdź obecność plików w `data/`.
-- Brak DX/POTA/HAMALERT:
-  sprawdź internet oraz host/port/login/hasła.
-- Brak pogody:
-  sprawdź `weather_key` i współrzędne.
-- Dotyk przesunięty/odwrócony:
-  popraw `Touch Rotation` i `touch_swap_mode`, ewentualnie reset kalibracji.
-
-## Licencja
-
-MIT License. Szczegóły: `LICENSE`.
+Open-source for the ham radio community.
