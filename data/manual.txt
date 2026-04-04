@@ -1,6 +1,6 @@
 ESP32-HAM-CLOCK v1.2 (04.03.2026)
 Author: Konrad Wisniewski SP3KON (with AI)
-Contact: sp3kon@gmail.com
+Contact: vu3gwn@outlook.com
 
 Flashing via browser (ESP Web Tools)
 - Page: https://jason2866.github.io/WebSerial_ESPTool/

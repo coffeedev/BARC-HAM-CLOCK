@@ -116,7 +116,9 @@ TFT_eSPI tft = TFT_eSPI();
 #define BACKLIGHT_PWM_RES_BITS 8
 #define MIN_BACKLIGHT_PERCENT 10
 #define TFT_BACKLIGHT 100
+#define NIGHT_DIMMNESS 1
 int backlightPercent = TFT_BACKLIGHT;
+
 
 // ========== DOTYK (XPT2046 - ESP32-2432S028R) ==========
 #ifndef TOUCH_CS
@@ -982,11 +984,10 @@ float timezoneHours = DEFAULT_TIMEZONE_HOURS;
 String qrzUsername = "";
 String qrzPassword = "";
 String qrzStatus = "QRZ: not configured";
-String weatherApiKey = "407b38e4e0355adf151d95a5b3d6326d";
+String weatherApiKey = "";
 String openWebRxUrl = DEFAULT_OPENWEBRX_URL;
-bool tft_nightsleep_enable = false;
-String tft_nightsleep_on = "" ;
-String tft_nightsleep_off = "" ;
+String tft_dim_start = "" ;
+String tft_dim_stop = "" ;
 
 // Konfiguracja filtrĂłw CC-Cluster (dxspots.com)
 bool clusterNoAnnouncements = true;      // set/noann - wyłącz ogłoszenia
@@ -1088,6 +1089,8 @@ void setBacklightPercent(int percent) {
 #endif
 }
 
+
+
 void applyTouchRotation() {
   Serial.print("*** Applying touch.setRotation(");
   Serial.print(touchRotation);
@@ -1110,7 +1113,7 @@ void applyTftInversion() {
 }
 
 void initTFT() {
-  Serial.println("=== Inicjalizacja TFT ===");
+  Serial.println("=== Initialization of TFT ===");
   
   // Backlight włączany automatycznie przez tft.begin() (zgodnie z Setup801)
   // Nie trzeba ręcznie włączać backlight przed begin()
@@ -1134,14 +1137,14 @@ void initTFT() {
   inMenu = false;
   menuOption = 0;
   
-  Serial.println("=== TFT zainicjalizowany OK ===");
+  Serial.println("=== TFT Initialization OK ===");
   
   // Wyświetl ekran startowy (boot log)
   drawBootScreen();
-  tftBootPrintLine("=== Inicjalizacja TFT ===");
+  tftBootPrintLine("=== Initialization of TFT ===");
   tftBootPrintLine("TFT begin()...");
   tftBootPrintLine("TFT begin() OK");
-  tftBootPrintLine("=== TFT zainicjalizowany OK ===");
+  tftBootPrintLine("=== TFT Initialization OK ===");
 }
 
 void drawBootScreen() {
@@ -1177,7 +1180,7 @@ void drawWelcomeScreenYellow() {
   //return;
   tft.fillScreen(TFT_BLACK);
   // Optional startup background from LittleFS (data/logo.bmp)
-  drawBmpFromFS("data/logo.bmp", 0, 0);
+  //drawBmpFromFS("data/logo.bmp", 0, 0);
   tft.setTextSize(1);
   const int centerX = 160;
   const int startY = 40;
@@ -6777,9 +6780,8 @@ static void buildWeatherDetailHeaders(String headers[WeatherData::DETAIL_COLS]) 
 
   struct tm timeinfo;
   if (getTimeWithTimezone(&timeinfo)) {
-    static const char *daysPl[7] = {"Nd", "Pn", "Wt", "Śr", "Czw", "Pt", "Sob"};
     static const char *daysEn[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    const char **days = (tftLanguage == TFT_LANG_EN) ? daysEn : daysPl;
+    const char **days = daysEn;
 
     for (uint8_t i = 0; i < 3; i++) {
       int dayIdx = (timeinfo.tm_wday + 1 + i) % 7;
@@ -12110,15 +12112,15 @@ void updateNTPTime() {
     return;
   }
   
-  Serial.println("[NTP] Aktualizacja czasu NTP...");
+  Serial.println("[NTP] NTP time update...");
   configTime(GMT_OFFSET_SEC, 0, NTP_SERVER);
   lastNTPUpdate = now;
   
   struct tm timeinfo;
   if (getLocalTime(&timeinfo)) {
-    Serial.println("[NTP] Czas NTP zsynchronizowany");
+    Serial.println("[NTP] time synchronized...");
   } else {
-    Serial.println("[NTP] BĹÄ„D: Nie udaĹ‚o siÄ™ pobraÄ‡ czasu NTP");
+    Serial.println("[NTP] failed");
   }
 }
 
@@ -12131,6 +12133,9 @@ void loadPreferences() {
   
   preferences->begin("dxcluster", false);
   yield();
+  
+  Serial.println("Loading Preferences") ;
+  
 
   // Kolejność ekranów
   loadDefaultScreenOrder();
@@ -12154,17 +12159,14 @@ void loadPreferences() {
   wifiPassword2 = preferences->getString("wifi_pass2", "");
   yield();
   
-  tft_nightsleep_enable = preferences->getBool("tft_nightsleep_enable", false);
+  tft_dim_start = preferences->getString("tft_dim_start", "");
   yield();
-  tft_nightsleep_on = preferences->getString("tft_nightsleep_on", "");
+  tft_dim_stop = preferences->getString("tft_dim_stop", "");
   yield();
-  tft_nightsleep_off = preferences->getString("tft_nightsleep_off", "");
-  yield();
-  Serial.print("----------------------Load Preferences: tft_nightsleep_enable = ");
-  Serial.print(tft_nightsleep_enable ? "ON" : "OFF");
-  Serial.print(tft_nightsleep_on) ;
-  Serial.print(tft_nightsleep_off) ;
-  Serial.println("----------------------");
+
+  Serial.println("variables loaded") ;
+  Serial.println(tft_dim_start) ;
+  Serial.println(tft_dim_stop) ;
   
   clusterHost = preferences->getString("cluster_host", DEFAULT_CLUSTER_HOST);
   yield();
@@ -12321,15 +12323,12 @@ void savePreferences() {
   preferences->putString("wifi_ssid2", wifiSSID2);
   preferences->putString("wifi_pass2", wifiPassword2);
   
-  preferences->putBool("tft_nightsleep_enable", tft_nightsleep_enable);
-  preferences->putString("tft_nightsleep_on", tft_nightsleep_on);
-  preferences->putString("tft_nightsleep_off", tft_nightsleep_off);
+  preferences->putString("tft_dim_start", tft_dim_start);
+  preferences->putString("tft_dim_stop", tft_dim_stop);
 
-  Serial.print("----------------------Save Preferences: tft_nightsleep_enable = ");
-  Serial.print(tft_nightsleep_enable ? "ON" : "OFF");
-  Serial.print(tft_nightsleep_on) ;
-  Serial.print(tft_nightsleep_off) ;
-  Serial.println("----------------------");
+  Serial.println("variables saved") ;
+  Serial.println(tft_dim_start) ;
+  Serial.println(tft_dim_stop) ;
   
   preferences->putString("cluster_host", clusterHost);
   preferences->putInt("cluster_port", clusterPort);
@@ -12635,12 +12634,11 @@ void setupWebServer() {
         wifiPassword2 = doc["wifi_pass2"].as<String>();
       }
 
-      tft_nightsleep_enable = doc["tft_nightsleep_enable"].as<bool>();
-      if (doc["tft_nightsleep_on"].is<String>()) {
-        tft_nightsleep_on = doc["tft_nightsleep_on"].as<String>();
+      if (doc["tft_dim_start"].is<String>()) {
+        tft_dim_start = doc["tft_dim_start"].as<String>();
       }
-      if (doc["tft_nightsleep_off"].is<String>()) {
-        tft_nightsleep_off = doc["tft_nightsleep_off"].as<String>();
+      if (doc["tft_dim_stop"].is<String>()) {
+        tft_dim_stop = doc["tft_dim_stop"].as<String>();
       }
 
       clusterHost = doc["cluster_host"].as<String>();
@@ -12958,8 +12956,8 @@ void setupWebServer() {
       wifiPassword.trim();
       wifiSSID2.trim();
       wifiPassword2.trim();
-      tft_nightsleep_on.trim();
-      tft_nightsleep_off.trim();
+      tft_dim_start.trim();
+      tft_dim_stop.trim();
       clusterHost.trim();
       potaClusterHost.trim();
       potaFilterCommand.trim();
@@ -13125,9 +13123,8 @@ void setupWebServer() {
     doc["wifi_pass"] = wifiPassword;
     doc["wifi_ssid2"] = wifiSSID2;
     doc["wifi_pass2"] = wifiPassword2;
-    doc["tft_nightsleep_enable"] = tft_nightsleep_enable;
-    doc["tft_nightsleep_on"] = tft_nightsleep_on;
-    doc["tft_nightsleep_off"] = tft_nightsleep_off;
+    doc["tft_dim_start"] = tft_dim_start;
+    doc["tft_dim_stop"] = tft_dim_stop;
     doc["cluster_host"] = clusterHost;
     doc["cluster_port"] = clusterPort;
     doc["pota_host"] = potaClusterHost;
@@ -13526,6 +13523,103 @@ void setup() {
 #endif
 }
 
+void setBacklightPercent2(int percent, int min =1) {
+  if (percent < min) percent = min;
+  if (percent > 100) percent = 100;
+  uint32_t dutyMax = (1U << BACKLIGHT_PWM_RES_BITS) - 1U;
+  uint32_t duty = (percent * dutyMax) / 100U;
+#if defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3)
+  ledcWrite(TFT_BL_PIN, duty);
+#else
+  ledcWrite(BACKLIGHT_PWM_CHANNEL, duty);
+#endif
+}
+
+//BP#213
+void screenDim() {
+  setBacklightPercent2(NIGHT_DIMMNESS) ;
+}
+
+void screenUnDim() {
+ setBacklightPercent2(backlightPercent) ;
+}
+
+// Fast parser: "HH:mm" → minutes since midnight
+int timeToMinutes(const String &t) {
+  if (t.length() < 5 || t[2] != ':') return -1;
+
+  if (!isDigit(t[0]) || !isDigit(t[1]) ||
+      !isDigit(t[3]) || !isDigit(t[4])) {
+    return -1;
+  }
+
+  int h = (t[0] - '0') * 10 + (t[1] - '0');
+  int m = (t[3] - '0') * 10 + (t[4] - '0');
+
+  if (h > 23 || m > 59) return -1;
+
+  return h * 60 + m;
+}
+
+// Check if current time is within range
+bool isTimeInRange(String current,
+                   String start,
+                   String end)
+  {
+  current.trim() ;
+  start.trim() ;
+  end.trim() ;
+
+  int cur = timeToMinutes(current);
+  int st  = timeToMinutes(start);
+  int en  = timeToMinutes(end);
+
+  if (cur < 0 || st < 0 || en < 0) return false;
+
+  if (st <= en) {
+    return (cur >= st && cur <= en);
+  } else {
+    // Overnight range (e.g. 22:00 → 06:00)
+    return (cur >= st || cur <= en);
+  }
+}
+
+void getCurrentTime(char *buffer, size_t len) {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    strncpy(buffer, "00:00", len);
+    return;
+  }
+  strftime(buffer, len, "%H:%M", &timeinfo);
+}
+
+void handleDisplaySleep() 
+{
+  struct tm timeinfo;
+  const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
+  configTime(timezoneOffsetSec, 0, "pool.ntp.org");
+  if (!getLocalTime(&timeinfo)) 
+  {
+    Serial.println("getTimeWithTimeZone failed. returning") ;
+    return;
+  }
+  char current[6];
+  strftime(current, 6, "%H:%M", &timeinfo);
+
+  //Serial.println(String("current: ") + (current) + " tft_dim_start " + tft_dim_start + " tft_dim_stop " + tft_dim_stop);
+  
+  if (isTimeInRange(current, tft_dim_start, tft_dim_stop))
+  {
+    //Serial.println("Dimmed") ;
+    screenDim();
+  } 
+  else 
+  {
+    //Serial.println("UnDimmed") ;
+    screenUnDim();
+  }
+}
+
 void loop() {
   static unsigned long loopCounter = 0;
   static unsigned long lastLoopPrint = 0;
@@ -13536,12 +13630,16 @@ void loop() {
   // Feed watchdog
   yield();
 
+
   // Odroczony restart (ĹĽeby odpowiedĹş HTTP zdÄ…ĹĽyĹ‚a wyjĹ›Ä‡)
   if (restartRequested && (long)(millis() - restartAtMs) >= 0) {
     LOGV_PRINTLN("[LOOP] Restart requested - restarting...");
     delay(50);
     ESP.restart();
   }
+
+  handleDisplaySleep();
+  yield() ;
   
   // ObsĹ‚uga serwera WWW
   if (server != nullptr) {
@@ -13559,7 +13657,7 @@ void loop() {
     // Jeżeli wcześniej był uruchomiony AP do konfiguracji, wyłącz go po udanym połączeniu STA,
     // żeby nie robić wrażenia "zwiechy" (klient AP traci link przy przełączeniu kanału).
     if (WiFi.getMode() & WIFI_AP) {
-      Serial.println("Wyłączam AP (portal) po połączeniu STA. Użyj IP z sieci domowej.");
+      Serial.println("Turning off the AP (portal) after the STA connects. Use the IP from the home network.");
       WiFi.softAPdisconnect(true);
       WiFi.mode(WIFI_STA);
     }
@@ -13568,7 +13666,8 @@ void loop() {
     updateNTPTime();
     connectToCluster();
     connectToPotaCluster();
-    connectToAPRS(); // Połącz również z APRS-IS
+    connectToAPRS();    
+
   } else if (wifiConnected && WiFi.status() != WL_CONNECTED) {
     LOGV_PRINTLN("[LOOP] WiFi status zmieniony: połączony -> rozłączony");
     wifiConnected = false;

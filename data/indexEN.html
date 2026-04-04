@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32-HAM-CLOCK</title>
+    <title>BARC-HAM-CLOCK</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -351,14 +351,13 @@
     </style>
 </head>
 <body>
-    <a class="coffee-link" href="https://buycoffee.to/esp32hamclock" target="_blank" rel="noopener noreferrer">If you like it, BUY ME A COFFEE</a>
-    <div class="app-title">ESP32-HAM-CLOCK</div>
+    <div class="app-title">BARC HAM CLOCK</div>
     <div class="nav">
-        <button class="nav-btn active" onclick="showPage('dxspot')">DXSPOT</button>
+        <button class="nav-btn" onclick="showPage('propagation')">Propagation</button>
+		<button class="nav-btn active" onclick="showPage('dxspot')">DXSPOT</button>
         <button class="nav-btn" onclick="showPage('pota')">POTA</button>
         <button class="nav-btn" onclick="showPage('hamalert')">HAMALERT</button>
         <button class="nav-btn" onclick="showPage('aprs')">APRS</button>
-        <button class="nav-btn" onclick="showPage('propagation')">Propagation</button>
         <button class="nav-btn" onclick="showPage('alert')">ALERT</button>
         <button class="nav-btn" onclick="showPage('tft')">TFT Screen</button>
         <button class="nav-btn" onclick="showPage('config')">Settings</button>
@@ -496,14 +495,12 @@
             <div class="config-section">
                 <h3>🖥️ Night Sleep</h3>
                 <div class="form-group">
-                    <label>Switch Off display between time Off & time On</label>
-                    <small>Screen off time in HH:mm</small>
-                    <input type="text" id="tft_nightsleep_on" name="tft_nightsleep_on" value="23:00">
-                    <small>Screen on time in HH:mm</small>
-                    <input type="text" id="tft_nightsleep_off" name="tft_nightsleep_off" value="06:00">
+                    <label>Dim the display from Start time to Stop time (24hrs format)</label>
+                    <small>Decrease the brightness from HH:mm (IST)</small>
+                    <input type="text" id="tft_dim_start" name="tft_dim_start" value="00:00">
+                    <small>Normal display brightness from HH:mm (IST)</small>
+                    <input type="text" id="tft_dim_stop" name="tft_dim_stop" value="00:00">
                     <small> </small>
-					<input type="checkbox" id="tft_nightsleep_enable" name="tft_nightsleep_enable" style="width: auto;">
-                    <span>Enable Night Sleep</span>
                 </div>
             </div>
 
@@ -1512,9 +1509,8 @@
                     document.getElementById('wifi_pass').value = data.wifi_pass || "";
                     document.getElementById('wifi_ssid2').value = data.wifi_ssid2 || "";
                     document.getElementById('wifi_pass2').value = data.wifi_pass2 || "";
-					document.getElementById('tft_nightsleep_enable').checked = data.tft_nightsleep_enable !== false;
-					document.getElementById('tft_nightsleep_on').value = data.tft_nightsleep_on || "23:00"
-					document.getElementById('tft_nightsleep_off').value = data.tft_nightsleep_off || "06:00"
+					document.getElementById('tft_dim_start').value = data.tft_dim_start || ""
+					document.getElementById('tft_dim_stop').value = data.tft_dim_stop || ""
                     const backlightValue = (data.tft_backlight !== undefined && data.tft_backlight !== null) ? data.tft_backlight : 100;
                     document.getElementById('tft_backlight').value = backlightValue;
                     document.getElementById('tft_backlight_value').textContent = backlightValue;
@@ -1985,9 +1981,8 @@
             wifi_pass: document.getElementById('wifi_pass').value,
             wifi_ssid2: document.getElementById('wifi_ssid2').value,
             wifi_pass2: document.getElementById('wifi_pass2').value,
-			tft_nightsleep_enable: document.getElementById('tft_nightsleep_enable').value,
-			tft_nightsleep_on: document.getElementById('tft_nightsleep_on').value,
-			tft_nightsleep_off: document.getElementById('tft_nightsleep_off').value,
+			tft_dim_start: document.getElementById('tft_dim_start').value,
+			tft_dim_stop: document.getElementById('tft_dim_stop').value,
             tft_backlight: parseInt(document.getElementById('tft_backlight').value) || 100,
             tft_lang: (document.getElementById('tft_lang') ? document.getElementById('tft_lang').value : "en"),
             table_size: (document.getElementById('table_size') ? document.getElementById('table_size').value : "normal"),
