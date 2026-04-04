@@ -1,21 +1,24 @@
 /*
- * ESP32-HAM-CLOCK - Odbiornik DX Cluster i stacji APRS-IS z interfejsem WWW i opcjonalnym wyświetlaczem TFT
- * 
- * 
-  if (now - lastTelnetAttempt < 20000) {
- * - WiFi Manager (AP mode jeśli brak zapisanych danych)
- * - Połączenie z Telnet DX Cluster (TYLKO ODBIĂ“R - nie wysyła spotów)
- * - Parsowanie i przechowywanie spotów DX
- * - Obliczanie odległości (Haversine)
- * - Interfejs WWW z polling (odświeżanie co 2 sekundy)
- * - Wyświetlacz TFT (ESP32-2432S028) - opcjonalnie ESP32 WROOM + TFT ILI9341 
- * 
- * UWAGA: Urządzenie działa TYLKO w trybie odbioru.
- * Nie wysyła żadnych spotów do DX Cluster - tylko odbiera i wyświetla informacje.
- * Tak samo z APRS.fi  - tylko odczyt.
- */
+ * BARC-HAM-CLOCK - 
+ * Original author SP3KON
+ * Modifications by VU3GWN
+ 
+# New features in v1.5
 
-// Wczesne forward-deklaracje, aby auto-prototypowanie Arduino znało typy używane w sygnaturach
+### List of features
+
+1. Some performance improvements
+2. Setup section has some India specific help
+3. IST can now be set (Thanks to _SP3KON_)
+4. Clean up of some language selection elements (Code clean up WIP)
+5. Added a Night mode (dimming the screen)
+6. BARC Branding (Limited yet)
+7. Initial WIFI AP is now shown as **SETUP-HAM-CLOCK**
+
+ * 
+*/
+
+
 enum ScreenType : uint8_t;    // pełna definicja niżej
 enum Screen6ViewMode : uint8_t;
 struct DXSpot;                // pełna definicja niżej
@@ -607,7 +610,7 @@ int touchCalNewYMax = TOUCH_Y_MAX;
 #define MAX_POTA_SPOTS 30  // Bufor 30 ostatnich spotów (TFT pokaże max 10)
 #define GMT_OFFSET_SEC 0 //19800  // UTC+5:30 (India Time)
 #define DEFAULT_TIMEZONE_HOURS 5.5f
-#define DEFAULT_CALLSIGN "VU3GWN"
+#define DEFAULT_CALLSIGN "SWL"
 #define DEFAULT_OPENWEBRX_URL "http://okno.ddns.net:8078"
 #define PROPAGATION_URL "https://www.hamqsl.com/solarxml.php"
 const unsigned long PROPAGATION_FETCH_INTERVAL_MS = 60UL * 60UL * 1000UL; // 60 min
@@ -975,8 +978,8 @@ String hamalertHost = DEFAULT_HAMALERT_HOST;
 int hamalertPort = DEFAULT_HAMALERT_PORT;
 String hamalertLogin = "";
 String hamalertPassword = "";
-String userCallsign = "VU3GWN";
-String userLocator = "MK82sw";
+String userCallsign = "";
+String userLocator = "";
 double userLat = 12.93;
 double userLon = 77.54;
 bool userLatLonValid = false;
