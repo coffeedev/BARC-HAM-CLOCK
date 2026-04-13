@@ -932,7 +932,7 @@ bool enableLedAlert = DEFAULT_ENABLE_LED_ALERT;
 int ledAlertDurationMs = DEFAULT_LED_ALERT_DURATION_MS;
 int ledAlertBlinkMs = DEFAULT_LED_ALERT_BLINK_MS;
 int aprsBeaconTxCount = 0;
-const char *APRS_POSITION_COMMENT = "https://github.com/SP3KON/ESP32-HAM-CLOCK";
+const char *APRS_POSITION_COMMENT = "BARC HAM CLOCK";
 bool aprsBeaconEnabled = true;
 const unsigned long APRS_ALERT_FRAME_PULSE_MS = 500UL;
 const int APRS_ALERT_CLOSE_BTN_X = 286;
@@ -1195,7 +1195,7 @@ void drawWelcomeScreenYellow() {
   String lines[] = {
     " ",
     "BARC-HAM-CLOCK",
-    "version 1.5",
+    "version 1.5.1",
     " "
   };
   for (int i = 0; i < 4; i++) {
@@ -10639,26 +10639,26 @@ void connectToAPRS() {
   Serial.println("[APRS] connectToAPRS() START");
   
   if (!wifiConnected) {
-    Serial.println("[APRS] WiFi nie poĹ‚Ä…czony - wyjĹ›cie");
+    Serial.println("[APRS] WiFi not connected – Exit");
     return;
   }
   
   if (aprsClient.connected()) {
-    // JeĹ›li konfiguracja siÄ™ zmieniĹ‚a, rozĹ‚Ä…cz i poĹ‚Ä…cz ponownie
+    // If the configuration has changed, disconnect and reconnect.
     Serial.println("[APRS] JuĹĽ poĹ‚Ä…czony - sprawdzam czy potrzeba reconnect...");
-    // MoĹĽna dodaÄ‡ sprawdzenie czy konfiguracja siÄ™ zmieniĹ‚a, ale na razie zostawiamy jak jest
-    // W razie potrzeby reconnect nastÄ…pi automatycznie przez watchdog
+    // We could add a check to see if the configuration has changed, but for now, let's leave it as is.
+    // If necessary, reconnection will occur automatically via the watchdog.
     return;
   }
   
   unsigned long now = millis();
   if (now - lastAPRSAttempt < 5000) {
-    return; // Cichy return - nie spamuj logu
+    return; // Silent Return – Don't spam the log.
   }
   
   lastAPRSAttempt = now;
   
-  Serial.print("[APRS] ĹÄ…czenie z APRS-IS: ");
+  Serial.print("[APRS] Connecting to APRS-IS:");
   Serial.print(aprsIsHost);
   Serial.print(":");
   Serial.println(aprsIsPort);
@@ -10675,15 +10675,15 @@ void connectToAPRS() {
     Serial.println(aprsIsHost);
   }
   
-  Serial.println("[APRS] WywoĹ‚anie aprsClient.connect()...");
+  Serial.println("[APRS] Calling aprsClient.connect()...");
   unsigned long connectStart = millis();
   
-  // Ustaw timeout poĹ‚Ä…czenia (300 sekund jak w wymaganiach)
+  // Set the connection timeout (300 seconds, as per the requirements).
   aprsClient.setTimeout(300);
   
   if (aprsClient.connect(aprsIsHost.c_str(), aprsIsPort)) {
     unsigned long connectTime = millis() - connectStart;
-    Serial.print("[APRS] PoĹ‚Ä…czono z APRS-IS! (czas: ");
+    Serial.print("[APRS] Connected to APRS-IS! (time: ");
     Serial.print(connectTime);
     Serial.println("ms)");
     aprsConnected = true;
@@ -10696,7 +10696,7 @@ void connectToAPRS() {
     sendAPRSLogin();
   } else {
     unsigned long connectTime = millis() - connectStart;
-    Serial.print("[APRS] BĹ‚Ä…d poĹ‚Ä…czenia z APRS-IS (czas: ");
+    Serial.print("[APRS] APRS-IS connection error (time: ");
     Serial.print(connectTime);
     Serial.println("ms)");
     aprsConnected = false;
@@ -10707,7 +10707,7 @@ void connectToAPRS() {
 // Wyślij login do APRS-IS
 void sendAPRSLogin() {
   if (!aprsConnected || !aprsClient.connected()) {
-    Serial.println("[APRS] Nie mozna wysłać loginu - brak połączenia");
+    Serial.println("[APRS] Unable to send login – no connection.");
     return;
   }
   
@@ -10716,7 +10716,7 @@ void sendAPRSLogin() {
   login += getAprsTxCallsignWithSsid();
   login += " pass ";
   login += String(aprsPasscode);
-  login += " vers ESP32-HAM-CLOCK 1.2";
+  login += " vers BARC-HAM-CLOCK 1.5.1";
   
   Serial.print("[APRS] Wysyłanie loginu: ");
   Serial.println(login);
@@ -11102,14 +11102,14 @@ void sendAprsPosition() {
     return;
   }
   if (!userLatLonValid) {
-    Serial.println("[APRS] Pomijam TX pozycji - brak poprawnych współrzędnych użytkownika");
+    Serial.println("[APRS] Skipping position TX – missing valid user coordinates.");
     return;
   }
 
   String txCallsign = getAprsTxCallsignWithSsid();
   txCallsign.trim();
   if (!isAprsTxCallValid(txCallsign)) {
-    Serial.println("[APRS] Pomijam TX pozycji - ustaw znak w konfiguracji APRS");
+    Serial.println("[APRS] Skipping position TX – set the symbol in the APRS configuration.");
     return;
   }
   txCallsign.toUpperCase();
@@ -11126,20 +11126,20 @@ void sendAprsPosition() {
   frame += aprsSymbolCode;
   frame += " ";
   bool useProjectComment = (((aprsBeaconTxCount + 1) % 5) == 0); // co piąty beacon
-  String comment = useProjectComment ? String(APRS_POSITION_COMMENT)
-                                     : sanitizeAprsComment(aprsUserComment);
+  String comment = String(APRS_POSITION_COMMENT);
+  
   frame += comment;
 
   aprsClient.println(frame);
   lastAPRSPositionTxMs = millis();
   aprsBeaconTxCount++;
 
-  Serial.print("[APRS] Wysłano pozycję: ");
+  Serial.print("[APRS] Sent");
   Serial.println(frame);
 }
 
-// Parsuj ramkÄ™ APRS
-// Format przykĹ‚adowy: SP3KON-1>APRS,TCPIP*,qAC,T2POLAND:!5202.40N/01655.12E#PHG5130/Poznan
+// Parse the APRS frame
+// Example format: VU3GWN-1>APRS,TCPIP*,qAC,T2POLAND:!5202.40N/01655.12E#PHG5130/Poznan
 bool parseAPRSFrame(String line, APRSStation &station) {
   LOGV_PRINTF("[APRS] Parsing frame: %s\n", line.c_str());
   
@@ -12292,10 +12292,10 @@ void loadPreferences() {
   int storedIntervalMin = preferences->getInt(NVS_KEY_APRS_INTERVAL_MIN, DEFAULT_APRS_INTERVAL_MIN);
   applyAprsIntervalMinutes(storedIntervalMin);
   yield();
-  // Ograniczenie promienia do 1-50 km
+  // Limit radius to 1–50 km
   if (aprsFilterRadius < 1) aprsFilterRadius = 1;
   if (aprsFilterRadius > 50) aprsFilterRadius = 50;
-  // Uwaga: APRS uĹĽywa wspĂłĹ‚rzÄ™dnych z sekcji "Moja Stacja" (userLat, userLon) - nie ma osobnych pĂłl
+  // Uwaga: APRS uses coordinates from the " Station" section (user Lat, iserLohn) - there are no separate fields
 
   if (!userLatLonValid && userLocator.length() >= 4) {
     updateUserLatLonFromLocator();
@@ -12306,12 +12306,12 @@ void loadPreferences() {
   
   preferences->end();
 
-  // Zastosuj inwersję kolorów po wczytaniu ustawień
+  // Apply color inversion after loading settings.
   if (tftInitialized) {
     applyTftInversion();
   }
   
-  Serial.println("Konfiguracja wczytana");
+  Serial.println("Configuration loaded");
 }
 
 void savePreferences() {
@@ -13069,8 +13069,8 @@ void setupWebServer() {
         return;
       }
 
-      // Aktualizuj współrzędne z locatora TYLKO jeśli nie podano bezpośrednio współrzędnych
-      // Priorytet: jeĹ›li userLatLonValid == true (podano bezpoĹ›rednio LAT/LON), nie nadpisuj z locatora
+      // Update coordinates from the locator ONLY if coordinates were not provided directly.
+      // Priority: If userLatLonValid == true (LAT/LON provided directly), do not overwrite from the locator.
       if (!userLatLonValid && userLocator.length() >= 4) {
         updateUserLatLonFromLocator();
       }
@@ -13084,7 +13084,7 @@ void setupWebServer() {
       
       // W trybie AP (wifiConnected=false) bez restartu nigdy nie przejdziemy na STA.
       // Restart jest najpewniejszy i upraszcza flow.
-      Serial.println("Zapisano konfiguracjÄ™. Restart za chwilÄ™...");
+      Serial.println("Configuration saved. Restarting shortly....");
       requestRestart(1500);
     } else {
       server->send(400, "application/json", "{\"status\":\"error\"}");
@@ -13700,12 +13700,12 @@ void loop() {
 
   // Obsługa POTA Telnet
   if (wifiConnected) {
-    // Tryb HTTP API zamiast Telnetu (źródło: https://api.pota.app/v1/spots)
+    // HTTP API Mode Instead of Telnet (źródło: https://api.pota.app/v1/spots)
     if (lastPotaApiFetchMs == 0 || now - lastPotaApiFetchMs > POTA_API_FETCH_INTERVAL_MS) {
       if (fetchPotaApi()) {
         lastPotaApiFetchMs = now;
       } else {
-        // nawet przy błędzie aktualizuj czas, by nie spamować API
+        // Even in the event of an error, update the timestamp to avoid spamming the API.
         lastPotaApiFetchMs = now;
       }
     }
@@ -13720,7 +13720,7 @@ void loop() {
   // ObsĹ‚uga APRS-IS
   if (wifiConnected) {
     if (!aprsConnected) {
-      LOGV_PRINTLN("[LOOP] WiFi OK, prĂłba poĹ‚Ä…czenia z APRS-IS...");
+      LOGV_PRINTLN("[LOOP] WiFi OK, Attempting to connect to APRS-IS...");
       connectToAPRS();
     } else {
       handleAPRSData();
@@ -13734,14 +13734,14 @@ void loop() {
           nextAPRSPositionDueMs = nowAprs + aprsPositionIntervalMs;
         }
       } else {
-        nextAPRSPositionDueMs = 0; // Reset harmonogramu gdy beacon jest wyłączony lub brak loginu/koordynat
+        nextAPRSPositionDueMs = 0; // Schedule reset when the beacon is off or login/coordinates are missing.
         aprsBeaconTxCount = 0;
       }
       
-      // Watchdog APRS: jeĹ›li brak danych przez dĹ‚uĹĽszy czas, zrĂłb reconnect
+      // Watchdog APRS: If there is no data for an extended period, reconnect.
       unsigned long inactivityTime = nowAprs - lastAPRSRxMs;
       if (inactivityTime > APRS_INACTIVITY_RECONNECT_MS) {
-        LOGV_PRINT("[LOOP] WARNING: Brak danych z APRS-IS przez ");
+        LOGV_PRINT("[LOOP] WARNING: No data from APRS-IS for");
         LOGV_PRINT(inactivityTime / 1000);
         LOGV_PRINTLN(" sekund -> reconnect");
         aprsClient.stop();
@@ -13752,7 +13752,7 @@ void loop() {
     }
   }
 
-  // Aktualizuj dane propagacyjne (hamqsl solarxml)
+  // Update propagation data (hamqsl solarxml)
   if (wifiConnected) {
     unsigned long now = millis();
     unsigned long interval = lastPropagationFetchOk ? PROPAGATION_FETCH_INTERVAL_MS
@@ -13764,7 +13764,7 @@ void loop() {
     }
   }
 
-  // ObsĹ‚uga kolejki QRZ (asynchronicznie)
+  // QRZ Queue Handling (Asynchronously)
   if (wifiConnected && qrzQueueLen > 0 &&
       qrzUsername.length() > 0 && qrzPassword.length() > 0) {
     unsigned long now = millis();
@@ -13797,7 +13797,7 @@ void loop() {
     }
   }
 
-  // Aktualizuj pogodÄ™ (OpenWeather)
+  // Update Weather (OpenWeather)
   if (wifiConnected) {
     unsigned long now = millis();
     unsigned long interval = lastWeatherFetchOk ? WEATHER_FETCH_INTERVAL_MS
@@ -13809,7 +13809,7 @@ void loop() {
     }
   }
 
-  // Przetwarzaj maks. 1 liniÄ™ telnet na iteracjÄ™ (ĹĽeby nie zamroziÄ‡ WWW/UI)
+  // Process a maximum of 1 Telnet line per iteration (to avoid freezing the Web/UI).
   if (pendingTelnetLine.length() > 0) {
     LOGV_PRINT("[LOOP] Przetwarzanie linii telnet, len=");
     LOGV_PRINTLN(pendingTelnetLine.length());
@@ -13821,20 +13821,20 @@ void loop() {
     }
     
     String line = pendingTelnetLine;
-    pendingTelnetLine = ""; // WyczyĹ›Ä‡ PRZED parsowaniem (ĹĽeby nie gromadziÄ‡)
-    yield(); // Feed watchdog przed dĹ‚ugÄ… operacjÄ…
+    pendingTelnetLine = ""; // Clear BEFORE parsing (to avoid accumulation)
+    yield(); // Feed watchdog before a long operation.
     
     DXSpot spot;
     unsigned long parseStart = millis();
     if (parseDXSpot(line, spot)) {
       unsigned long parseTime = millis() - parseStart;
       if (parseTime > 50) {
-        LOGV_PRINT("[LOOP] WARNING: parseDXSpot zajÄ™Ĺ‚o ");
+        LOGV_PRINT("[LOOP] WARNING: parseDXSpot took ");
         LOGV_PRINT(parseTime);
         LOGV_PRINTLN("ms");
       }
       addSpot(spot);
-      // Aktualizuj wyĹ›wietlacz TFT z nowymi spotami (tylko jeĹ›li jesteĹ›my na ekranie 2)
+      // Update the TFT display with new spots (only if we are on Screen 2).
 
     }
   }
