@@ -35,29 +35,7 @@ struct PropagationData;       // pełna definicja niżej
 extern bool unlisRunning;
 extern bool unlisGameOver;
 
-// Zastępuje polskie znaki w opisach, aby uniknąć problemów z fontem
-void normalizePolish(String &text) {
-  text.replace("ą", "a");
-  text.replace("ć", "c");
-  text.replace("ę", "e");
-  text.replace("ł", "l");
-  text.replace("ń", "n");
-  text.replace("ó", "o");
-  text.replace("ś", "s");
-  text.replace("ź", "z");
-  text.replace("ż", "z");
-  text.replace("Ą", "A");
-  text.replace("Ć", "C");
-  text.replace("Ę", "E");
-  text.replace("Ł", "L");
-  text.replace("Ń", "N");
-  text.replace("Ó", "O");
-  text.replace("Ś", "S");
-  text.replace("Ź", "Z");
-  text.replace("Ż", "Z");
-}
-
-// ========== KONFIGURACJA WYŚWIETLACZA TFT ==========
+// ========== TFT DISPLAY CONFIGURATION ==========
 // Włącz TFT w platformio.ini (build_flags) lub Arduino IDE; guard to avoid redefinition warnings
 #ifndef ENABLE_TFT_DISPLAY
 #define ENABLE_TFT_DISPLAY
@@ -77,7 +55,7 @@ void normalizePolish(String &text) {
 #include <math.h>
 #include <ctype.h>
 
-// ========== TYPY EKRANÓW (używane w prototypach) ==========
+// ========== SCREEN TYPES (used in prototypes) ==========
 enum ScreenType : uint8_t {
   SCREEN_OFF = 0,
   SCREEN_HAM_CLOCK = 1,
@@ -376,39 +354,6 @@ enum TrKey : uint8_t {
   TR_LANGUAGE,
   TR_KEY_COUNT
 };
-
-/*
-
-static const char* TR_PL[TR_KEY_COUNT] = {
-  "Czas",
-  "Znak",
-  "KRAJ",
-  "Oczekiwanie na spoty...",
-  "POGODA",
-  "TEMPERATURA",
-  "WILGOTNOŚĆ",
-  "CIŚNIENIE",
-  "WIATR",
-  "Prognoza na 3 godziny:",
-  "Prognoza na jutro:",
-  "Brak danych",
-  "BLAD: ",
-  "Strona",
-  "Przytrzymaj 5 sek = Kalibracja",
-  "TFT Kalibracja",
-  "Obrot 90deg w prawo (rot90cw)",
-  "Obrot 90deg w lewo (rot90ccw)",
-  "USTAWIENIA TFT",
-  "JASNOSC:",
-  "KOLOR MOTYWU:",
-  "Przytrzymaj 3 sek = Kalibracja",
-  "ZAPISZ",
-  "DOMYSLNE",
-  "ZAMKNIJ",
-  "JEZYK"
-};
-
-*/
 
 static const char* TR_EN[TR_KEY_COUNT] = {
   "Time",
@@ -8649,7 +8594,7 @@ void ALERT_Screen(const APRSStation &station) {
     iconColor = TFT_BLUE;
   }
   if (weatherAlert) {
-    const String weatherTitle = (tftLanguage == TFT_LANG_EN) ? "Weather:" : "Pogoda:";
+    const String weatherTitle = "Weather:";
     tft.setTextColor(TFT_CYAN);
     tft.setTextSize(2);
     int weatherTitleX = (320 - ((int)weatherTitle.length() * 12)) / 2;
@@ -8667,9 +8612,9 @@ void ALERT_Screen(const APRSStation &station) {
     decodeAprsWxFromComment(station.comment, wx);
 
     const String labelTemp = "TEMP";
-    const String labelHumidity = (tftLanguage == TFT_LANG_EN) ? "HUMIDITY" : "WILGOTNOŚĆ";
-    const String labelPressure = (tftLanguage == TFT_LANG_EN) ? "PRESSURE" : "CISNIENIE";
-    const String labelWind = "WIATR";
+    const String labelHumidity = "HUMIDITY";
+    const String labelPressure = "PRESSURE";
+    const String labelWind = "WIND";
     const String labelTempWithColon = labelTemp + ":";
     const String labelHumidityWithColon = labelHumidity + ":";
     const String labelPressureWithColon = labelPressure + ":";
@@ -10718,7 +10663,7 @@ void sendAPRSLogin() {
   login += String(aprsPasscode);
   login += " vers BARC-HAM-CLOCK 1.5.1";
   
-  Serial.print("[APRS] Wysyłanie loginu: ");
+  Serial.print("[APRS] Sending login: ");
   Serial.println(login);
   
   aprsClient.println(login);
@@ -10733,13 +10678,13 @@ void sendAPRSLogin() {
 // WyĹ›lij komendÄ™ filtra do APRS-IS
 void sendAPRSFilter() {
   if (!aprsConnected || !aprsClient.connected()) {
-    Serial.println("[APRS] Nie moĹĽna wysĹ‚aÄ‡ filtra - brak poĹ‚Ä…czenia");
+    Serial.println("[APRS] Unable to send filter – no connection.");
     return;
   }
   
   // Format filtra: #filter r/52.40/16.92/50
   // UĹĽywamy wspĂłĹ‚rzÄ™dnych z sekcji "Moja Stacja"
-  double filterLat = userLatLonValid ? userLat : 52.40;  // Fallback jeĹ›li nie ustawione
+  double filterLat = userLatLonValid ? userLat : 52.40;  // Fallback if not set
   double filterLon = userLatLonValid ? userLon : 16.92;
   String filter = "#filter r/";
   filter += String(filterLat, 2);
@@ -10748,7 +10693,7 @@ void sendAPRSFilter() {
   filter += "/";
   filter += String(aprsFilterRadius);
   
-  Serial.print("[APRS] WysyĹ‚anie filtra: ");
+  Serial.print("[APRS] Sending filter: ");
   Serial.println(filter);
   
   aprsClient.println(filter);
@@ -11266,7 +11211,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
     }
   }
 
-  // SprawdĹş czy jest format z "/" czy bez "/"
+  // Check whether the format includes a "/" or not.
   int slashPos = line.indexOf('/', latStart);
   bool hasSlash = (slashPos >= 0);
   
@@ -11309,23 +11254,22 @@ bool parseAPRSFrame(String line, APRSStation &station) {
       }
     }
     
-    // Symbol table (znak przed /)
+    // Symbol table (character before /)
     if (slashPos >= 0) {
       station.symbolTable = line.substring(slashPos, slashPos + 1);
     }
-    // WyciÄ…gnij symbol code (znak po dĹ‚ugoĹ›ci geograficznej, po "/")
+    // Extract the code symbol (the character following the longitude, after the "/").
     // Format: !DDMM.mmN/DDDMM.mmEsymbol
     if (slashPos >= 0 && slashPos + 10 < line.length()) {
       station.symbol = line.substring(slashPos + 10, slashPos + 11);
     }
   } else {
-    // Format bez "/": DDMM.mmNsymbolDDDMM.mmE (symbol miÄ™dzy lat a lon)
-    // PrzykĹ‚ad: 5223.73NW01655.41E lub 5225.05NL01651.66E
+    // Format without "/": DDMM.mmNsymbolDDDMM.mmE (symbol between latitude and longitude)
     if (latStart + 7 < line.length()) {
       String latStr = line.substring(latStart, latStart + 7);
       if (latStr.length() == 7) {
         char dir = line.charAt(latStart + 7);
-        // UĹĽyj funkcji convertToDecimal do parsowania
+        // Use the Convert.ToDecimal function for parsing.
         float parsedLat = convertToDecimal(latStr, dir);
         if (!isnan(parsedLat)) {
           station.lat = parsedLat;
@@ -11335,7 +11279,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
         LOGV_PRINTF("[APRS] Parsed lat: %s%c -> %.6f\n", 
                     latStr.c_str(), dir, station.lat);
         
-        // Symbol table jest zaraz po kierunku lat
+        // The symbol table is located immediately after the direction flags.
         if (latStart + 8 < line.length()) {
           station.symbolTable = line.substring(latStart + 8, latStart + 9);
         }
@@ -11545,7 +11489,7 @@ void addAPRSStation(APRSStation station) {
 void handleAPRSData() {
   if (!aprsConnected || !aprsClient.connected()) {
     if (aprsConnected) {
-      LOGV_PRINTLN("[APRS] PoĹ‚Ä…czenie zerwane - reset flagĂłw");
+      LOGV_PRINTLN("[APRS] Connection disconnected – flag reset");
     }
     aprsConnected = false;
     aprsLoginSent = false;
@@ -11562,7 +11506,7 @@ void handleAPRSData() {
         String line = aprsBuffer;
         aprsBuffer = "";
         
-        // Ignoruj linie zaczynajÄ…ce siÄ™ od # (komentarze serwera)
+        // Ignore lines starting with # (server comments)
         if (line.startsWith("#")) {
           Serial.print("[APRS] Server: ");
           Serial.println(line);
@@ -11577,7 +11521,7 @@ void handleAPRSData() {
           // While Unlis Hunter or TFT settings screen is active,
           // suppress APRS alert popups and LED/buzzer alerts.
           if (aprsAlertEnabled && currentScreen != SCREEN_UNLIS_HUNTER && !brightnessMenuActive && shouldTriggerAprsAlert(station)) {
-            Serial.print("[APRS ALERT] stacja wykryta opisana w formacie tnc: ");
+            Serial.print("[APRS ALERT] Detected station described in TNC format:" );
             Serial.println(line);
             triggerAprsRgbLedAlert();
             #ifdef ENABLE_TFT_DISPLAY
@@ -11592,7 +11536,7 @@ void handleAPRSData() {
     } else if (c != 0) {
       // Keep control bytes (e.g. 0x1C/0x1D) for Mic-E decode compatibility.
       aprsBuffer += (char)c;
-      // Ograniczenie dĹ‚ugoĹ›ci bufora (zapobieganie przepeĹ‚nieniu)
+      // Buffer Length Limitation (Preventing Overflow)
       if (aprsBuffer.length() > 512) {
         aprsBuffer = aprsBuffer.substring(aprsBuffer.length() - 256);
       }
@@ -11673,7 +11617,7 @@ bool connectToWiFi() {
     }
 
     Serial.println("");
-    Serial.println("BĹ‚Ä…d poĹ‚Ä…czenia WiFi");
+    Serial.println("WiFi Connection Error");
     Serial.print("WiFi.status(): ");
     Serial.println((int)WiFi.status());
 
@@ -11681,7 +11625,7 @@ bool connectToWiFi() {
     WiFi.printDiag(Serial);
     Serial.println("--- Scan networks ---");
     int n = WiFi.scanNetworks(/*async=*/false, /*show_hidden=*/true);
-    Serial.print("Znaleziono sieci: ");
+    Serial.print("Networks found: ");
     Serial.println(n);
     bool found = false;
     for (int i = 0; i < n; i++) {
@@ -11699,7 +11643,7 @@ bool connectToWiFi() {
       }
     }
     if (!found) {
-      Serial.println("UWAGA: Nie widzÄ™ Twojego SSID w skanie (moĹĽe 5GHz / inny SSID / poza zasiÄ™giem / ukryte SSID).");
+      Serial.println("NOTE: I don't see your SSID in the scan (maybe 5GHz / other SSID / out of range / hidden SSID).");
     }
 
     return false;
@@ -11718,7 +11662,7 @@ bool connectToWiFi() {
     bool ok = attemptConnect(cred);
     if (ok) {
       wifiConnected = true;
-      Serial.print("PoĹ‚Ä…czono z SSID: ");
+      Serial.print("Connected to SSID:");
       Serial.println(cred.ssid);
       Serial.print("IP: ");
       Serial.println(WiFi.localIP());
@@ -11730,7 +11674,7 @@ bool connectToWiFi() {
 
       return true;
     } else {
-      Serial.println("PrĂłba poĹ‚Ä…czenia nieudana dla SSID: " + cred.ssid);
+      Serial.println("Connection attempt failed for SSID: " + cred.ssid);
     }
   }
 
@@ -11897,23 +11841,23 @@ void connectToPotaCluster() {
       potaTelnetClient.print("\r\n");
     }
   } else {
-    Serial.println("[POTA] BĹ‚Ä…d poĹ‚Ä…czenia z POTA Cluster");
+    Serial.println("[POTA] Connection error with POTA Cluster");
     potaTelnetConnected = false;
   }
 }
 
-// WyĹ›lij komendÄ™ konfiguracyjnÄ… do DX Cluster (CC-Cluster)
-// UWAGA: UĹĽywane TYLKO do konfiguracji odbioru (set/noann, set/nowwv, set/filter, etc.)
-// NIE wysyĹ‚a ĹĽadnych spotĂłw - urzÄ…dzenie dziaĹ‚a tylko w trybie odbioru
+// Send configuration command to DX Cluster (CC-Cluster)
+// NOTE: Used ONLY for reception configuration (set/noann, set/nowwv, set/filter, etc.)
+// It does NOT transmit any spots – the device operates in receive mode only.
 void sendClusterCommand(String command) {
   if (!telnetConnected || !telnetClient.connected()) {
-    Serial.print("[CLUSTER] Nie moĹĽna wysĹ‚aÄ‡ komendy '");
+    Serial.print("[CLUSTER] Cannot send command ");
     Serial.print(command);
-    Serial.println("' - brak poĹ‚Ä…czenia");
+    Serial.println("' - No connection");
     return;
   }
   
-  Serial.print("[CLUSTER] WysyĹ‚anie komendy: ");
+  Serial.print("[CLUSTER] Sending command:");
   Serial.println(command);
   telnetClient.print(command);
   telnetClient.print("\r\n");
@@ -11926,7 +11870,7 @@ void sendClusterConfigCommands() {
     return;
   }
   
-  Serial.println("[CLUSTER] WysyĹ‚anie komend konfiguracyjnych CC-Cluster...");
+  Serial.println("[CLUSTER] Sending CC-Cluster configuration commands...");
   
   // WyĹ‚Ä…cz ogĹ‚oszenia (domyĹ›lnie wĹ‚Ä…czone)
   if (clusterNoAnnouncements) {
@@ -11965,7 +11909,7 @@ void sendClusterConfigCommands() {
     sendClusterCommand("set/nofilter");
   }
   
-  Serial.println("[CLUSTER] Komendy konfiguracyjne wysĹ‚ane");
+  Serial.println("[CLUSTER] Configuration commands sent");
 }
 
 void handleTelnetData() {
@@ -11975,7 +11919,7 @@ void handleTelnetData() {
   
   if (!telnetConnected || !telnetClient.connected()) {
     if (telnetConnected) {
-      LOGV_PRINTLN("[TELNET] PoĹ‚Ä…czenie zerwane - reset flagĂłw");
+      LOGV_PRINTLN("[TELNET] Connection disconnected – flag reset");
     }
     telnetConnected = false;
     clusterLoginSent = false;
