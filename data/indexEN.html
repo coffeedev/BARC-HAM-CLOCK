@@ -363,8 +363,8 @@
         <button class="nav-btn" onclick="showPage('config')">Settings</button>
         <button class="nav-btn" onclick="showPage('manual')">Manual</button>
         <div class="lang-switch">
-            <a class="lang-link active" href="/indexEN.html">EN</a>
-            <!-- <span>|</span>
+            <!--<a class="lang-link active" href="/indexEN.html">EN</a>
+             <span>|</span>
             <a class="lang-link" href="/index.html">PL</a> -->
         </div>
     </div>
@@ -504,17 +504,18 @@
                 </div>
             </div>
 
+			<!--
             <div class="config-section">
                 <h3>🌐 TFT Language</h3>
                 <div class="form-group">
                     <label>TFT UI language:</label>
                     <select id="tft_lang" name="tft_lang">
-                        <!--<option value="pl">Polish</option> -->
+                        <!--<option value="pl">Polish</option>
                         <option value="en">English</option>
                     </select>
                     <small>Changes the TFT on-screen labels (requires restart)</small>
                 </div>
-            </div>
+            </div> -->
 
             <div class="config-section">
                 <h3>📋 Table Size</h3>
@@ -1984,7 +1985,7 @@
 			tft_dim_start: document.getElementById('tft_dim_start').value,
 			tft_dim_stop: document.getElementById('tft_dim_stop').value,
             tft_backlight: parseInt(document.getElementById('tft_backlight').value) || 100,
-            tft_lang: (document.getElementById('tft_lang') ? document.getElementById('tft_lang').value : "en"),
+            tft_lang: "en",
             table_size: (document.getElementById('table_size') ? document.getElementById('table_size').value : "normal"),
             tft_rotation: (isNaN(parseInt(document.getElementById('tft_rotation').value)) ? 1 : parseInt(document.getElementById('tft_rotation').value)),
             tft_invert: (document.getElementById('tft_invert').value === "1"),

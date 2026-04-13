@@ -3,6 +3,11 @@
  * Original author SP3KON
  * Modifications by VU3GWN
  
+
+# New features in v1.5.1
+
+1. More clean up of polish.
+
 # New features in v1.5
 
 ### List of features
@@ -372,6 +377,8 @@ enum TrKey : uint8_t {
   TR_KEY_COUNT
 };
 
+/*
+
 static const char* TR_PL[TR_KEY_COUNT] = {
   "Czas",
   "Znak",
@@ -400,6 +407,8 @@ static const char* TR_PL[TR_KEY_COUNT] = {
   "ZAMKNIJ",
   "JEZYK"
 };
+
+*/
 
 static const char* TR_EN[TR_KEY_COUNT] = {
   "Time",
@@ -435,20 +444,15 @@ static const char* tr(TrKey key) {
   if (idx >= TR_KEY_COUNT) {
     return "";
   }
-  return (tftLanguage == TFT_LANG_EN) ? TR_EN[idx] : TR_PL[idx];
+  return TR_EN[idx];
 }
 
 static const char* tftLangToCode(uint8_t lang) {
-  return (lang == TFT_LANG_EN) ? "en" : "pl";
+  return "en" ;
 }
 
 static uint8_t tftLangFromCode(const String &code) {
-  String up = code;
-  up.toLowerCase();
-  if (up == "en") {
     return TFT_LANG_EN;
-  }
-  return TFT_LANG_PL;
 }
 
 static const char* dxTableSizeToCode(uint8_t mode) {
@@ -1207,11 +1211,11 @@ void drawWelcomeScreenGreen() {
   }
   tft.setTextColor(TFT_GREEN);
   tft.setTextSize(1);
-  const int centerX = 160;
+  const int centerX = 220;
   const int startY = 40;
   const int lineGap = 16;
   tft.setTextSize(2);
-  String line = "FOLLOW THE PROPAGATION...";
+  String line = "Across Bands, \nBeyond Borders...";
   int textWidth = line.length() * 12;
   int x = centerX - (textWidth / 2);
   tft.setCursor(x, startY + 6 * lineGap + 25);
@@ -1656,6 +1660,7 @@ String sanitizePolishToAscii(const String &input) {
   return out;
 }
 
+/*
 String getPolishDateStringFull() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo, 1)) {
@@ -1680,6 +1685,7 @@ String getPolishDateStringFull() {
   String full = String(weekdaysFull[timeinfo.tm_wday]) + " " + dateBuf;
   return full;
 }
+*/
 
 String getEnglishDateStringFull() {
   struct tm timeinfo;
@@ -1701,6 +1707,8 @@ String getEnglishDateStringFull() {
   return full;
 }
 
+/*
+
 String getPolishDateStringFullWithTimezone() {
   struct tm timeinfo;
   if (!getTimeWithTimezone(&timeinfo)) {
@@ -1720,6 +1728,7 @@ String getPolishDateStringFullWithTimezone() {
   String full = String(weekdaysFull[timeinfo.tm_wday]) + " " + dateBuf;
   return full;
 }
+*/
 
 String getEnglishDateStringFullWithTimezone() {
   struct tm timeinfo;
@@ -1819,19 +1828,16 @@ void updateScreen1Header() {
   int startX = 25; // OdstÄ™p od lewej (miejsce na ikonÄ™ menu)
   int textY = 12;
 
-  // CzÄ™Ĺ›Ä‡ 1: "ESP32" w czarnym prostokÄ…cie (negatyw)
   tft.fillRect(startX, textY - 4, 65, 22, TFT_BLACK);
   tft.setTextColor(TFT_RADIO_ORANGE);
   tft.setTextSize(2);
-  tft.setCursor(startX + 5, textY);
-  tft.print("ESP32");
+  tft.setCursor(startX + 4, textY);
+  tft.print("BARC");
 
-  // CzÄ™Ĺ›Ä‡ 2: "-HAM-" (standardowo)
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(startX + 75, textY);
   tft.print("-HAM-");
 
-  // Część 3: "CLOCK" (pogrubione wizualnie przez podwĂłjny druk)
   int clockX = startX + 145;
   tft.setCursor(clockX, textY);
   tft.print("CLOCK");
@@ -2013,13 +2019,9 @@ void updateScreen1Date() {
 
   String dateText;
   if (screen1TimeMode == SCREEN1_TIME_LOCAL) {
-    dateText = (tftLanguage == TFT_LANG_EN)
-                 ? getEnglishDateStringFullWithTimezone()
-                 : getPolishDateStringFullWithTimezone();
+    dateText = getEnglishDateStringFullWithTimezone() ;
   } else {
-    dateText = (tftLanguage == TFT_LANG_EN)
-                 ? getEnglishDateStringFull()
-                 : getPolishDateStringFull();
+    dateText = getEnglishDateStringFull();
   }
   drawDateLine(dateText);
 }
@@ -6778,8 +6780,8 @@ static void drawWeatherDetailIconCell(int x, int y, int weatherId, const String 
 }
 
 static void buildWeatherDetailHeaders(String headers[WeatherData::DETAIL_COLS]) {
-  headers[0] = (tftLanguage == TFT_LANG_EN) ? "+3h" : "+3godz";
-  headers[1] = (tftLanguage == TFT_LANG_EN) ? "+6h" : "+6godz";
+  headers[0] = "+3h" ;
+  headers[1] = "+6h" ;
 
   struct tm timeinfo;
   if (getTimeWithTimezone(&timeinfo)) {
@@ -6905,11 +6907,10 @@ static void drawWeatherFooterArea(ScreenType screenId) {
   if (cityLabel.length() == 0) {
     cityLabel = "--";
   }
-  cityLabel = sanitizePolishToAscii(cityLabel);
+  
+  //cityLabel = sanitizePolishToAscii(cityLabel);
 
-  const String prefix = (tftLanguage == TFT_LANG_EN)
-                        ? "Weather for location: "
-                        : "Pogoda dla lokalizacji: ";
+  const String prefix = "Weather for location: ";
   const int maxChars = 52; // 320px width at text size 1 (6px/char) with small margins
   int maxCityChars = maxChars - (int)prefix.length();
   if (maxCityChars < 3) {
@@ -6996,7 +6997,7 @@ void drawWeatherForecast() {
 
   drawHamburgerMenuButton3D(5, 7);
 
-  const char *detailHeader = (tftLanguage == TFT_LANG_EN) ? "Weather forecast" : "Prognoza pogody";
+  const char *detailHeader = "Weather forecast";
   tft.setTextSize(2);
   tft.setCursor(35, 8);
   tft.print(detailHeader);
@@ -12717,10 +12718,10 @@ void setupWebServer() {
         tftInvertColors = doc["tft_invert"].as<bool>();
       }
       if (doc["tft_lang"].is<String>()) {
-        tftLanguage = tftLangFromCode(doc["tft_lang"].as<String>());
+        tftLanguage = TFT_LANG_EN;
       } else if (doc["tft_lang"].is<int>()) {
         int lang = doc["tft_lang"].as<int>();
-        tftLanguage = (lang == TFT_LANG_EN) ? TFT_LANG_EN : TFT_LANG_PL;
+        tftLanguage = TFT_LANG_EN;
       }
       if (doc["table_size"].is<String>()) {
         dxTableSizeMode = dxTableSizeFromCode(doc["table_size"].as<String>());
@@ -13151,7 +13152,7 @@ void setupWebServer() {
     doc["tft_backlight"] = backlightPercent;
     doc["tft_invert"] = tftInvertColors;
     doc["tft_rotation"] = tftRotation;
-    doc["tft_lang"] = tftLangToCode(tftLanguage);
+    doc["tft_lang"] = "en";
     doc["table_size"] = dxTableSizeToCode(dxTableSizeMode);
     doc["tft_auto_switch"] = tftAutoSwitchEnabled;
     doc["tft_switch_time_sec"] = tftAutoSwitchTimeSec;
