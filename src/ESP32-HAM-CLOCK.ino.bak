@@ -3,10 +3,6 @@
  * Original author SP3KON
  * Modifications by VU3GWN
  
-# New features in v1.6.0
-1. Added second clock screen
-2. Removed all Polish language
-3. Lot cleaner code
 
 # New features in v1.5.1
 
@@ -63,18 +59,17 @@ extern bool unlisGameOver;
 enum ScreenType : uint8_t {
   SCREEN_OFF = 0,
   SCREEN_HAM_CLOCK = 1,
-  SCREEN_HAM_CLOCK2 = 2,
-  SCREEN_DX_CLUSTER = 3,
-  SCREEN_SUN_SPOTS = 4,
-  SCREEN_BAND_INFO = 5,
-  SCREEN_WEATHER_DSP = 6,
-  SCREEN_APRS_IS = 7,
-  SCREEN_POTA_CLUSTER = 8,
-  SCREEN_HAMALERT_CLUSTER = 9,
-  SCREEN_APRS_RADAR = 10,
-  SCREEN_MATRIX_CLOCK = 11,
-  SCREEN_UNLIS_HUNTER = 12,
-  SCREEN_WEATHER_FORECAST = 13
+  SCREEN_DX_CLUSTER = 2,
+  SCREEN_SUN_SPOTS = 3,
+  SCREEN_BAND_INFO = 4,
+  SCREEN_WEATHER_DSP = 5,
+  SCREEN_APRS_IS = 6,
+  SCREEN_POTA_CLUSTER = 7,
+  SCREEN_HAMALERT_CLUSTER = 8,
+  SCREEN_APRS_RADAR = 9,
+  SCREEN_MATRIX_CLOCK = 10,
+  SCREEN_UNLIS_HUNTER = 11,
+  SCREEN_WEATHER_FORECAST = 12
 };
 
 #define LOG_VERBOSE false
@@ -88,14 +83,14 @@ enum ScreenType : uint8_t {
 #include <XPT2046_Touchscreen.h>
 TFT_eSPI tft = TFT_eSPI();
 
-// TFT pins for ESP32-2432S028 (CYD - Cheap Yellow Display)
-// According to the documentation: https://github.com/rzeldent/platformio-espressif32-sunton
-// ILI9341 controller, SPI interface
+// Piny TFT dla ESP32-2432S028 (CYD - Cheap Yellow Display)
+// Zgodnie z dokumentację: https://github.com/rzeldent/platformio-espressif32-sunton
+// ILI9341 kontroler, SPI interface
 // 
-// In the Arduino IDE: pins are defined in User_Setup.h (copy the file to the TFT_eSPI library folder).
-// In PlatformIO, pins are defined in `platformio.ini` via `build_flags`.
+// W Arduino IDE: piny są definiowane w User_Setup.h (skopiuj plik do folderu biblioteki TFT_eSPI)
+// W PlatformIO: piny są definiowane w platformio.ini przez build_flags
 //
-// Fallback for backlight (if not defined in User_Setup.h or build_flags)
+// Fallback dla backlight (jeśli nie zdefiniowane w User_Setup.h lub build_flags)
 #ifndef TFT_BL
 #define TFT_BL 21  // Backlight pin (GPIO21 dla ESP32-2432S028)
 #endif
@@ -111,26 +106,26 @@ TFT_eSPI tft = TFT_eSPI();
 int backlightPercent = TFT_BACKLIGHT;
 
 
-// ========== TOUCH (XPT2046 - ESP32-2432S028R) ==========
+// ========== DOTYK (XPT2046 - ESP32-2432S028R) ==========
 #ifndef TOUCH_CS
 #define TOUCH_CS 33
 #endif
 #ifndef TOUCH_IRQ
-//#define TOUCH_IRQ 36 // default is 36; for an external ILI9341 TFT, use 35
-#define TOUCH_IRQ 35 // for external ILI9341 TFT
+//#define TOUCH_IRQ 36 // domyślnie 36 a dla zewnętrznego TFT ILI9341 użyć 35
+#define TOUCH_IRQ 35 // dla zewnętrznego TFT ILI9341
 #endif
 #ifndef TOUCH_MOSI
 #define TOUCH_MOSI 32
 #endif
 #ifndef TOUCH_MISO
-//#define TOUCH_MISO 39 // 39 by default; for an external ILI9341 TFT, use 27.
-#define TOUCH_MISO 27 // for external ILI9341 TFT
+//#define TOUCH_MISO 39 // domyślnie 39 a dla zewnętrznego TFT ILI9341 użyć 27
+#define TOUCH_MISO 27 // dla zewnętrznego TFT ILI9341
 #endif
 #ifndef TOUCH_CLK
 #define TOUCH_CLK 25
 #endif
 
-// Touch Calibration (adjust if positions are shifted)
+// Kalibracja dotyku (dopasuj jeśli pozycje są przesunięte)
 #define TOUCH_X_MIN 200
 #define TOUCH_X_MAX 3800
 #define TOUCH_Y_MIN 200
@@ -163,11 +158,10 @@ const int BOOT_LOG_LINE_HEIGHT = 10;
 bool bootSequenceActive = true;
 bool littleFsReady = false;
 
-// ========== MENU AND NAVIGATION SYSTEM ==========
-const int SCREEN_PAGE_COUNT = 12;
+// ========== SYSTEM MENU I NAWIGACJI ==========
+const int SCREEN_PAGE_COUNT = 11;
 const ScreenType DEFAULT_SCREEN_ORDER[SCREEN_PAGE_COUNT] = {
   SCREEN_HAM_CLOCK,
-  SCREEN_HAM_CLOCK2,
   SCREEN_DX_CLUSTER,
   SCREEN_APRS_IS,
   SCREEN_APRS_RADAR,
@@ -182,7 +176,6 @@ const ScreenType DEFAULT_SCREEN_ORDER[SCREEN_PAGE_COUNT] = {
 
 ScreenType screenOrder[SCREEN_PAGE_COUNT] = {
   SCREEN_HAM_CLOCK,
-  SCREEN_HAM_CLOCK2,
   SCREEN_DX_CLUSTER,
   SCREEN_APRS_IS,
   SCREEN_APRS_RADAR,
@@ -194,17 +187,17 @@ ScreenType screenOrder[SCREEN_PAGE_COUNT] = {
   SCREEN_HAMALERT_CLUSTER,
   SCREEN_MATRIX_CLOCK
 };
-ScreenType currentScreen = SCREEN_OFF;  // Set after loading preferences
-bool inMenu = false;    // Are we in an internal page menu?
-int menuOption = 0;     // Current menu option (if inMenu == true)
+ScreenType currentScreen = SCREEN_OFF;  // Ustawiany po wczytaniu preferencji
+bool inMenu = false;    // Czy jesteśmy w menu wewnętrznym strony
+int menuOption = 0;     // Aktualna opcja w menu (jeśli inMenu == true)
 const int DEFAULT_TFT_SWITCH_TIME_SEC = 30;
 bool tftAutoSwitchEnabled = false;
 int tftAutoSwitchTimeSec = DEFAULT_TFT_SWITCH_TIME_SEC;
 unsigned long tftAutoSwitchLastMs = 0;
 ScreenType tftAutoSwitchLastScreen = SCREEN_OFF;
 unsigned long lastScreenUpdate = 0;
-const unsigned long SCREEN_UPDATE_INTERVAL = 100; // Update the screen every 100ms
-const unsigned long DX_SCREEN_MIN_REDRAW_MS = 5000; // Limit DX table writes to at most once every 5 seconds.
+const unsigned long SCREEN_UPDATE_INTERVAL = 100; // Aktualizuj ekran co 100ms
+const unsigned long DX_SCREEN_MIN_REDRAW_MS = 5000; // Ogranicz zapis tabeli DX do max 1 raz/5s
 unsigned long lastScreen1UpdateMs = 0;
 unsigned long lastScreen3UpdateMs = 0;
 unsigned long lastScreen4UpdateMs = 0;
@@ -311,8 +304,8 @@ enum Screen1TimeMode {
 uint8_t screen1TimeMode = SCREEN1_TIME_UTC;
 
 enum TftLang : uint8_t {
-  //TFT_LANG_PL = 0,
-  TFT_LANG_EN = 0
+  TFT_LANG_PL = 0,
+  TFT_LANG_EN = 1
 };
 uint8_t tftLanguage = TFT_LANG_EN;
 
@@ -1147,7 +1140,7 @@ void drawWelcomeScreenYellow() {
   String lines[] = {
     " ",
     "BARC-HAM-CLOCK",
-    "version 1.6.0",
+    "version 1.5.1",
     " "
   };
   for (int i = 0; i < 4; i++) {
@@ -1313,7 +1306,7 @@ void updateTFT_Spots() {
 extern TaskHandle_t uiTaskHandle;
 static void requestUiScreenRedraw(uint8_t pendingScreenId);
 
-// Main function for drawing screens
+// GĹ‚Ăłwna funkcja rysujÄ…ca ekrany
 void drawScreen(ScreenType screenNum) {
   if (!tftInitialized) {
     return;
@@ -1345,9 +1338,6 @@ void drawScreen(ScreenType screenNum) {
   switch (screenNum) {
     case SCREEN_HAM_CLOCK:
       drawHamClock();
-      break;
-    case SCREEN_HAM_CLOCK2:
-      drawHamClock2();
       break;
     case SCREEN_DX_CLUSTER:
       drawDxCluster();
@@ -1642,28 +1632,6 @@ String getPolishDateStringFull() {
 }
 */
 
-String getEnglishDateStringShort() {
-
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo, 1)) {
-    return "No date";
-  }
-
-  static const char* weekdaysFullEn[] = {
-    "Sun", "Mon", "Tue", "Wed",
-    "Thu", "Fri", "Sat"
-  };
-
-  String dateBuf = String(timeinfo.tm_mday < 10 ? "0" : "") + String(timeinfo.tm_mday) +
-                   "." +
-                   String((timeinfo.tm_mon + 1) < 10 ? "0" : "") + String(timeinfo.tm_mon + 1) +
-                   "." + String(1900 + timeinfo.tm_year);
-
-  String full = String(weekdaysFullEn[timeinfo.tm_wday]) + " " + dateBuf;
-  return full;
-
-}
-
 String getEnglishDateStringFull() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo, 1)) {
@@ -1727,7 +1695,7 @@ String getEnglishDateStringFullWithTimezone() {
   return full;
 }
 
-// Draws a centered date/week line
+// Rysuje linię daty/tygodnia wyśrodkowaną z użyciem polskiej czcionki VLW (jeśli dostępna)
 void drawDateLine(const String &dateText) {
   const int frameX = 10;
   const int frameWidth = 300;
@@ -1744,7 +1712,7 @@ void drawDateLine(const String &dateText) {
     fontLoaded = true;
     textW = tft.textWidth(dateText);
     textH = tft.fontHeight();
-    // If the line is too wide, revert to a smaller system font.
+    // Jeśli linia jest zbyt szeroka, wróć do mniejszej czcionki systemowej
     if (textW > (frameWidth - 10)) {
       tft.unloadFont();
       fontLoaded = false;
@@ -1795,14 +1763,14 @@ void updateScreen1Header() {
   const int headerY = 0;
   const int headerH = 40;
   
-  // 1. LOGO BACKGROUND AND FRAME
+  // 1. TĹO I RAMKA LOGO
   tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_ORANGE);
-  // Darker bottom edge for a 3D effect
+  // Ciemniejsza krawÄ™dĹş na dole dla efektu 3D
   tft.drawFastHLine(0, headerH - 1, 320, 0x8410); 
 
-  // 2. "LOGO" Formatting
+  // 2. FORMATOWANIE "LOGO"
   
-  int startX = 25; // Left offset (space for menu icon)
+  int startX = 25; // OdstÄ™p od lewej (miejsce na ikonÄ™ menu)
   int textY = 12;
 
   tft.fillRect(startX, textY - 4, 65, 22, TFT_BLACK);
@@ -1830,43 +1798,43 @@ void updateScreen1Header() {
 }
 
 void drawHamClock() {
-  // Dark Background – Professional Appearance and Reduced Eye Strain
+  // Ciemne tĹ‚o - profesjonalny wyglÄ…d i mniejsze zmÄ™czenie oczu
   tft.fillScreen(TFT_BLACK);
   screen1HeaderNeedsRedraw = true;
   
-  // 1. HEADER – Orange Bar
+  // 1. NAGĹĂ“WEK - PomaraĹ„czowa belka
   updateScreen1Header();
 
-  // 2. Main Frame
+  // 2. RAMKA GĹĂ“WNA
   tft.drawRoundRect(10, 50, 300, 155, 8, TFT_DARKGREY);
 
-  // 3. CALLSIGN (VU3GWN) - Shifted higher
+  // 3. CALLSIGN (sp3kon) - PrzesuniÄ™ty wyĹĽej
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(4);
   String callsign = (userCallsign.length() > 0) ? userCallsign : DEFAULT_CALLSIGN;
   callsign.toUpperCase();
-  int callX = (320 - (callsign.length() * 24)) / 2; // Size 4 is approx. 24px wide
+  int callX = (320 - (callsign.length() * 24)) / 2; // Rozmiar 4 ma ok. 24px szerokoĹ›ci
   tft.setCursor(callX > 15 ? callX : 15, 65);
   tft.print(callsign);
 
-  // Write "OPERATOR STATION"
+  // Napis "OPERATOR STATION"
   tft.setTextSize(1);
   tft.setTextColor(TFT_RADIO_ORANGE);
   tft.setCursor(110, 105);
   tft.print("OPERATOR STATION");
 
-  // 4. UTC Clock – Same size as Callsign (TextSize 4)
-  // Restricted to the main frame area (x=10, width=300)
+  // 4. ZEGAR UTC - WielkoĹ›Ä‡ taka sama jak Callsign (TextSize 4)
+  // Ograniczenie do obszaru ramki gĹ‚Ăłwnej (x=10, szerokoĹ›Ä‡=300)
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(4);
   String timeUTC = (screen1TimeMode == SCREEN1_TIME_LOCAL)
                      ? getTimezoneTimeString("%H:%M:%S", 9)
                      : getUtcTimeString();
-  int frameX = 10;        // Start of main frame
-  int frameWidth = 300;   // Main frame width
-  int timeWidth = timeUTC.length() * 24; // Clock text width
-  int timeX = frameX + (frameWidth - timeWidth) / 2;// Centering within the frame
-  // Constrained to frame area (minimum frameX + margin)
+  int frameX = 10;        // PoczÄ…tek ramki gĹ‚Ăłwnej
+  int frameWidth = 300;   // SzerokoĹ›Ä‡ ramki gĹ‚Ăłwnej
+  int timeWidth = timeUTC.length() * 24; // SzerokoĹ›Ä‡ tekstu zegara
+  int timeX = frameX + (frameWidth - timeWidth) / 2; // WyĹ›rodkowanie w ramce
+  // Ograniczenie do obszaru ramki (minimum frameX + margines)
   timeX = (timeX < frameX + 5) ? frameX + 5 : timeX;
   tft.setCursor(timeX, 125);
   tft.print(timeUTC);
@@ -1889,7 +1857,7 @@ void drawHamClock() {
   }
   drawDateLine(dateText);
 
-  // 5. BOTTOM BAR – IP Address Only
+  // 5. DOLNY PASEK - Tylko Adres IP
   IPAddress ip;
   bool connected = false;
   if (wifiConnected && WiFi.status() == WL_CONNECTED) {
@@ -1908,7 +1876,7 @@ void drawHamClock() {
     tft.setCursor(ipX, 215);
     tft.print(ipStr);
     
-    // Small green connection indicator
+    // MaĹ‚y zielony indykator poĹ‚Ä…czenia
     tft.fillCircle(50, 222, 4, TFT_GREEN);
   } else {
     tft.setTextColor(TFT_RED);
@@ -1917,154 +1885,14 @@ void drawHamClock() {
     tft.print("NO CONNECTION");
     tft.fillCircle(50, 222, 4, TFT_RED);
   }
-    // 4. SCREEN CHANGE ARROWS (Navigation)
-  // Left arrow (Triangle: x1, y1, x2, y2, x3, y3, color)
+    // 4. STRZAĹKI ZMIANY EKRANU (Nawigacja)
+  // Lewa strzaĹ‚ka (TrĂłjkÄ…t: x1, y1, x2, y2, x3, y3, kolor)
   tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
   
-  // Right arrow
+  // Prawa strzaĹ‚ka
   tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
   
-  //End of drawHamClock
-}
 
-void updateScreen1Header2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK || inMenu) {
-    return;
-  }
-
-  if (!screen1HeaderNeedsRedraw) {
-    return;
-  }
-
-  const int headerY = 0;
-  const int headerH = 40;
-  
-  // 1. LOGO BACKGROUND AND FRAME
-  tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_ORANGE);
-  // Darker bottom edge for a 3D effect
-  tft.drawFastHLine(0, headerH - 1, 320, 0x8410); 
-
-  // 2. "LOGO" Formatting
-  
-  int startX = 25; // Left offset (space for menu icon)
-  int textY = 12;
-
-  tft.fillRect(startX, textY - 4, 65, 22, TFT_BLACK);
-  tft.setTextColor(TFT_RADIO_ORANGE);
-  tft.setTextSize(2);
-  tft.setCursor(startX + 6, textY);
-  tft.print("BARC");
-
-  int clockX = startX + 145;
-  tft.setCursor(clockX, textY);
-  tft.print("CLOCK");
-  tft.setCursor(clockX + 1, textY); // Lekkie przesuniÄ™cie o 1px w bok daje efekt "Bold"
-  tft.print("CLOCK");
-
-  screen1HeaderNeedsRedraw = false;
-}
-
-void drawHamClock2() {
-  // Dark Background – Professional Appearance and Reduced Eye Strain
-  tft.fillScreen(TFT_BLACK);
-  screen1HeaderNeedsRedraw = true;
-  
-  // 1. HEADER – Orange Bar
-  updateScreen1Header2();
-
-  // 2. Main Frame
-  tft.drawRoundRect(10, 50, 300, 155, 8, TFT_DARKGREY);
-  
- 	
- //End of drawHamClock2
-}
-
-void updateScreen1Clock2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK || inMenu) {
-    return;
-  }
-
-  static unsigned long lastClockRedrawMs = 0;
-  unsigned long now = millis();
-  if (lastClockRedrawMs != 0 && (now - lastClockRedrawMs) < DX_SCREEN_MIN_REDRAW_MS) {
-    return;
-  }
-
-  //return ;
-  setenv("TZ", "UTC0", 1);
-  tzset();
-  String timeUTC = getUtcTimeString();
-
-  struct tm timeinfo;
-  const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
-  configTime(timezoneOffsetSec, 0, "pool.ntp.org");
-  if (!getLocalTime(&timeinfo)) 
-  {
-    Serial.println("getTimeWithTimeZone failed. returning") ;
-    //return;
-  }
-  
-  char current[9];
-  strftime(current, 9, "%H:%M:%S", &timeinfo);
-  String timeLocal = String(current) ;
-
-  
-  // Use the same coordinates as in draw HamClock() – confine to the frame area.
-  int frameX = 10;        // Start of main frame
-  int frameWidth = 300;   // Main frame width
-  int timeWidth = timeUTC.length() * 24; // Clock text width
-  int timeX = frameX + (frameWidth - timeWidth) / 2; // Centering within the frame
-  timeX = (timeX < frameX + 5) ? frameX + 5 : timeX;
-  
-  // Clear only the clock text area (with a small margin), not the entire rectangle.
- // TextSize 4 has a height of approximately 32px, so clear a little more.
-  const int timeBoxY = 55;
-  const int timeBoxH = 120; // Text height + margin
-  const int timeBoxW = timeWidth + 10; // Text width + side margins
-  const int timeBoxX = timeX - 5; // Left margin
-  
-  // Constrain to frame area (do not extend beyond the frame)
-  int cleanX = (timeBoxX < frameX + 5) ? frameX + 5 : timeBoxX;
-  int cleanW = timeBoxW;
-  if (cleanX + cleanW > frameX + frameWidth - 5) {
-    cleanW = (frameX + frameWidth - 5) - cleanX;
-  }
-  
-  tft.fillRect(cleanX, timeBoxY, cleanW, timeBoxH, TFT_BLACK);
-
-  // Display UTC
-
-  tft.setTextColor(TFT_WHITE);
-  const char *timeLabelUTC = "UTC";
-  int labelWidth = (int)strlen(timeLabelUTC) * 6;
-  int labelX = frameX + (frameWidth - labelWidth) / 2;
-  tft.setTextSize(1);
-  tft.setCursor(labelX, 55);
-  tft.print(timeLabelUTC);
-
-  // Display UTC clock
-  
-  tft.setTextSize(4);
-  tft.setCursor(timeX, 70);
-  tft.print(timeUTC);
-
-    // Display Local
-
-  tft.setTextColor(TFT_WHITE);
-  const char *timeLabelLOCAL = "Local";
-  labelWidth = (int)strlen(timeLabelLOCAL) * 6;
-  labelX = frameX + (frameWidth - labelWidth) / 2;
-  tft.setTextSize(1);
-  tft.setCursor(labelX, 105);
-  tft.print(timeLabelLOCAL);
-
-  // Display Local clock
-  
-  tft.setTextSize(4);
-  tft.setCursor(timeX, 120);
-  tft.print(timeLocal);
-
-  lastClockRedrawMs = now;
 }
 
 void updateScreen1Clock() {
@@ -2076,7 +1904,7 @@ void updateScreen1Clock() {
                      ? getTimezoneTimeString("%H:%M:%S", 9)
                      : getUtcTimeString();
   
-  // Use the same coordinates as in draw HamClock() — confine to the frame area.
+  // UĹĽyj tych samych wspĂłĹ‚rzÄ™dnych co w drawHamClock() - ograniczenie do obszaru ramki
   int frameX = 10;        // PoczÄ…tek ramki gĹ‚Ăłwnej
   int frameWidth = 300;   // SzerokoĹ›Ä‡ ramki gĹ‚Ăłwnej
   int timeWidth = timeUTC.length() * 24; // SzerokoĹ›Ä‡ tekstu zegara
@@ -2576,7 +2404,7 @@ void updateScreen2Data() {
 
 // Ekran 7: POTA Cluster (SSB only, 10 spotów)
 void drawPotaCluster() {
-  // Use the same coordinates as in drawHamClock() — confine to the frame area.
+  // Użyj tych samych współrzędnych co w drawHamClock() - ograniczenie do obszaru ramki
 
   tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
   tft.setTextColor(TFT_BLACK);
@@ -3388,7 +3216,6 @@ const int SCREEN_ORDER_COUNT = SCREEN_PAGE_COUNT;
 ScreenType normalizeScreenType(uint8_t raw) {
   switch (raw) {
     case SCREEN_HAM_CLOCK:
-    case SCREEN_HAM_CLOCK2:
     case SCREEN_DX_CLUSTER:
     case SCREEN_SUN_SPOTS:
     case SCREEN_BAND_INFO:
@@ -3409,7 +3236,6 @@ ScreenType normalizeScreenType(uint8_t raw) {
 const char* screenTypeToCodeStr(ScreenType t) {
   switch (t) {
     case SCREEN_HAM_CLOCK: return "hamclock";
-    case SCREEN_HAM_CLOCK2: return "hamclock2";
     case SCREEN_DX_CLUSTER: return "dxcluster";
     case SCREEN_APRS_IS: return "aprsis";
     case SCREEN_APRS_RADAR: return "aprsradar";
@@ -3432,7 +3258,6 @@ ScreenType screenCodeToType(const String &code) {
   c.toLowerCase();
   c.trim();
   if (c == "hamclock") return SCREEN_HAM_CLOCK;
-  if (c == "hamclock2") return SCREEN_HAM_CLOCK2;
   if (c == "dxcluster") return SCREEN_DX_CLUSTER;
   if (c == "aprsis") return SCREEN_APRS_IS;
   if (c == "aprsradar") return SCREEN_APRS_RADAR;
@@ -3744,19 +3569,19 @@ void handleTouchNavigation() {
       }
     }
 
-    // Navigation: bottom touch areas (approx. 80x180)
+    // Nawigacja: dolne obszary dotyku (ok. 80x180)
     const uint16_t cornerY = 60;
     const uint16_t cornerX = 80;
     if (y >= cornerY && x < cornerX) {
       currentScreen = getPrevScreenId(currentScreen);
       drawScreen(currentScreen);
       resetTftAutoSwitchTimer();
-      LOGV_PRINTF("[TOUCH] Screen changed to: %d (tap left)\n", currentScreen);
+      LOGV_PRINTF("[TOUCH] Ekran zmieniony na: %d (tap left)\n", currentScreen);
     } else if (y >= cornerY && x >= (320 - cornerX)) {
       currentScreen = getNextScreenId(currentScreen);
       drawScreen(currentScreen);
       resetTftAutoSwitchTimer();
-      LOGV_PRINTF("[TOUCH] Screen changed to: %d (tap right)\n", currentScreen);
+      LOGV_PRINTF("[TOUCH] Ekran zmieniony na: %d (tap right)\n", currentScreen);
     }
   } else {
     touchActive = false;
@@ -4754,6 +4579,13 @@ void drawBrightnessMenu() {
   const int langStartX = (320 - (2 * langTileW + langGap)) / 2;
   const int langY = 160;
 
+  tft.setTextColor(TFT_LIGHTGREY);
+  tft.setTextSize(1);
+  tft.setCursor(10, langLabelY);
+  tft.print(tr(TR_LANGUAGE));
+  drawFilterTile(langStartX, langY, langTileW, langTileH, "PL", tftLanguage == TFT_LANG_PL);
+  drawFilterTile(langStartX + langTileW + langGap, langY, langTileW, langTileH, "EN", tftLanguage == TFT_LANG_EN);
+
   const int btnW = 90;
   const int btnH = 26;
   const int btnY = 190;
@@ -4999,7 +4831,7 @@ void handleBrightnessMenuTouch(uint16_t x, uint16_t y, bool isNewTap) {
     return;
   }
 
-  // Always update the start marker for the current touch before handling the tiles.
+  // Zawsze aktualizuj znacznik startu dla bieżącego dotknięcia, zanim obsłużymy kafelki
   if (isNewTap) {
     brightnessMenuTouchStartMs = now;
     brightnessMenuLongPressHandled = false;
@@ -5033,11 +4865,39 @@ void handleBrightnessMenuTouch(uint16_t x, uint16_t y, bool isNewTap) {
   }
 
   if (isNewTap) {
-    savePreferences();
-    drawBrightnessMenu();
+    if (isPointInRect(x, y, langStartX, langY, langTileW, langTileH)) {
+      tftLanguage = TFT_LANG_PL;
+      // Wymuś odświeżenie opisów pogody po zmianie języka
+      lastWeatherFetchMs = 0;
+      weatherData.valid = false;
+      weatherData.forecast3hValid = false;
+      weatherData.forecastNextDayValid = false;
+      for (uint8_t i = 0; i < WeatherData::DETAIL_COLS; i++) {
+        weatherData.detailValid[i] = false;
+      }
+      savePreferences();
+      drawBrightnessMenu();
+      return;
+    }
+    if (isPointInRect(x, y, langStartX + langTileW + langGap, langY, langTileW, langTileH)) {
+      tftLanguage = TFT_LANG_EN;
+      // Wymuś odświeżenie opisów pogody po zmianie języka
+      lastWeatherFetchMs = 0;
+      weatherData.valid = false;
+      weatherData.forecast3hValid = false;
+      weatherData.forecastNextDayValid = false;
+      for (uint8_t i = 0; i < WeatherData::DETAIL_COLS; i++) {
+        weatherData.detailValid[i] = false;
+      }
+      savePreferences();
+      drawBrightnessMenu();
+      return;
+    }
+  }
+
+  if (!isNewTap) {
     return;
   }
-  
 
   const int btnW = 90;
   const int btnH = 26;
@@ -5884,7 +5744,7 @@ void drawSunSpots() {
 
   tft.setTextSize(2);
   tft.setCursor(35, 8);
-  tft.print("PROPAGATION");
+  tft.print((tftLanguage == TFT_LANG_EN) ? "PROPAGATION" : "PROPAGACJA");
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
@@ -7977,9 +7837,6 @@ static void requestUiScreenRedraw(uint8_t pendingScreenId) {
     case SCREEN_HAM_CLOCK:
       uiPendingScreen1Redraw = true;
       break;
-    case SCREEN_HAM_CLOCK2:
-      uiPendingScreen1Redraw = true;
-      break;
     case SCREEN_DX_CLUSTER:
       uiPendingScreen2Redraw = true;
       break;
@@ -8022,9 +7879,6 @@ void updateScreen1() {
   }
   if (currentScreen == SCREEN_HAM_CLOCK && !inMenu && !aprsAlertScreenActive) {
     requestUiScreenRedraw(SCREEN_HAM_CLOCK);
-  }
-  if (currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
-    requestUiScreenRedraw(SCREEN_HAM_CLOCK2);
   }
 }
 #endif
@@ -10807,7 +10661,7 @@ void sendAPRSLogin() {
   login += getAprsTxCallsignWithSsid();
   login += " pass ";
   login += String(aprsPasscode);
-  login += " vers BARC-HAM-CLOCK 1.6.0";
+  login += " vers BARC-HAM-CLOCK 1.5.1";
   
   Serial.print("[APRS] Sending login: ");
   Serial.println(login);
@@ -12309,8 +12163,8 @@ void loadPreferences() {
   if (backlightPercent < MIN_BACKLIGHT_PERCENT) backlightPercent = MIN_BACKLIGHT_PERCENT;
   if (backlightPercent > 100) backlightPercent = 100;
   tftInvertColors = preferences->getBool("tft_inv", tftInvertColors);
-  tftLanguage = preferences->getUChar("tft_lang", TFT_LANG_EN);
-  //if (tftLanguage > TFT_LANG_EN) tftLanguage = TFT_LANG_PL;
+  tftLanguage = preferences->getUChar("tft_lang", TFT_LANG_PL);
+  if (tftLanguage > TFT_LANG_EN) tftLanguage = TFT_LANG_PL;
   dxTableSizeMode = preferences->getUChar("tft_tbl_size", DX_TABLE_SIZE_NORMAL);
   if (dxTableSizeMode > DX_TABLE_SIZE_ENLARGED) dxTableSizeMode = DX_TABLE_SIZE_NORMAL;
   int savedMenuHue = preferences->getInt("menu_hue", DEFAULT_MENU_THEME_HUE);
@@ -12709,7 +12563,7 @@ void setupWebServer() {
     if (server->hasArg("plain")) {
       String body = server->arg("plain");
       
-      StaticJsonDocument<8192> doc;  // Bufor dla pełnego payloadu konfiguracji z WWW
+        StaticJsonDocument<8192> doc;  // Bufor dla pełnego payloadu konfiguracji z WWW
       DeserializationError err = deserializeJson(doc, body);
       if (err) {
         server->send(400, "application/json", "{\"status\":\"error\",\"message\":\"json_parse\"}");
@@ -12765,7 +12619,7 @@ void setupWebServer() {
         if (timezoneHours > 14.0f) timezoneHours = 14.0f;
       }
       
-      // Geographic coordinates (LAT/LON)
+      // WspĂłĹ‚rzÄ™dne geograficzne (LAT/LON)
       bool latProvided = false;
       bool lonProvided = false;
       if (doc["user_lat"].is<float>() || doc["user_lat"].is<double>()) {
@@ -12776,14 +12630,14 @@ void setupWebServer() {
         userLon = doc["user_lon"].as<double>();
         lonProvided = true;
       }
-      // If both coordinates are provided, set the flag as valid.
-      // Note: We check if the values ​​are within the valid range (not just != 0).
+      // JeĹ›li podano obie wspĂłĹ‚rzÄ™dne, ustaw flagÄ™ jako waĹĽne
+      // Uwaga: sprawdzamy czy wartoĹ›ci sÄ… w prawidĹ‚owym zakresie (nie tylko != 0)
       if (latProvided && lonProvided && 
           userLat >= -90.0 && userLat <= 90.0 && 
           userLon >= -180.0 && userLon <= 180.0) {
         userLatLonValid = true;
       } else if (latProvided || lonProvided) {
-        // If only one coordinate is provided, treat as invalid.
+        // JeĹ›li podano tylko jednÄ… wspĂłĹ‚rzÄ™dnÄ…, uznaj za nieprawidĹ‚owe
         userLatLonValid = false;
       }
       
@@ -12827,7 +12681,7 @@ void setupWebServer() {
         applyMenuThemeFromHue();
       }
       
-      // CC-Cluster Filter Configuration
+      // Konfiguracja filtrĂłw CC-Cluster
       if (doc["cluster_noann"].is<bool>()) {
         clusterNoAnnouncements = doc["cluster_noann"].as<bool>();
       }
@@ -12988,16 +12842,16 @@ void setupWebServer() {
         if (aprsFilterRadius < 1) aprsFilterRadius = 1;
         if (aprsFilterRadius > 50) aprsFilterRadius = 50;
       }
-      // Note: APRS uses coordinates from the "Moya Station" section (user Lat, iserLohn) - there are no separate fields
+      // Uwaga: APRS uĹĽywa wspĂłĹ‚rzÄ™dnych z sekcji "Moja Stacja" (userLat, userLon) - nie ma osobnych pĂłl
       
-      // Touch Calibration Mode Configuration (Manual Override)
+      // Konfiguracja trybu kalibracji dotyku (ręczne nadpisanie)
       if (doc["touch_swap_mode"].is<String>()) {
         String mode = doc["touch_swap_mode"].as<String>();
         // Resetuj wszystkie flagi
         touchSwapXY = false;
         touchInvertX = false;
         touchInvertY = false;
-        //Set the appropriate flag or combination.
+        // Ustaw odpowiednią flagę lub kombinację
         if (mode == "xy") {
           touchSwapXY = true;
         } else if (mode == "x") {
@@ -13008,11 +12862,11 @@ void setupWebServer() {
           touchInvertX = true;
           touchInvertY = true;
         } else if (mode == "rot90cw") {
-          // Rotate 90° clockwise
+          // Obrót 90° w prawo (clockwise)
           touchSwapXY = true;
           touchInvertX = true;
         } else if (mode == "rot90ccw") {
-          // Rotate 90° left (counter-clockwise)
+          // Obrót 90° w lewo (counter-clockwise)
           touchSwapXY = true;
           touchInvertY = true;
         } else if (mode == "xy_both") {
@@ -13020,7 +12874,7 @@ void setupWebServer() {
           touchInvertX = true;
           touchInvertY = true;
         }
-       // "none" leaves everything as false
+        // "none" pozostawia wszystkie false
         Serial.print("Touch swap mode set to: ");
         Serial.println(mode);
       }
@@ -13045,7 +12899,7 @@ void setupWebServer() {
         }
       }
 
-      // Sanitization (most common cause: trailing spaces in SSID/password)
+      // Sanitizacja (najczÄ™stsza przyczyna: spacje na koĹ„cu SSID/hasĹ‚a)
       wifiSSID.trim();
       wifiPassword.trim();
       wifiSSID2.trim();
@@ -13066,7 +12920,7 @@ void setupWebServer() {
       openWebRxUrl.trim();
       aprsIsHost.trim();
       aprsCallsign.trim();
-     // KiwiSDR URL – can be empty (user does not need to set it)
+      // KiwiSDR URL - może być puste (użytkownik nie musi ustawiać)
 
       if (potaApiUrl.length() == 0) {
         potaApiUrl = DEFAULT_POTA_API_URL;
@@ -13085,7 +12939,7 @@ void setupWebServer() {
         hamalertPort = 0;
       }
 
-      // Screen order configurable via the web
+      // Kolejność ekranów konfigurowana z WWW
       if (doc["screen_order"].is<JsonArray>()) {
         JsonArray arr = doc["screen_order"].as<JsonArray>();
         int idx = 0;
@@ -13114,8 +12968,8 @@ void setupWebServer() {
           }
           idx++;
         }
-        // If the JSON was shorter, fill in the remaining values ​​with default values,
-        // to avoid losing screens (e.g., APRS RADAR) with an older or stripped-down payload.
+        // Jeśli JSON był krótszy, pozostałe uzupełnij wartościami domyślnymi,
+        // aby nie gubić ekranów (np. APRS RADAR) przy starszym/okrojonym payloadzie.
         for (; idx < SCREEN_ORDER_COUNT; idx++) {
           screenOrder[idx] = DEFAULT_SCREEN_ORDER[idx];
         }
@@ -13142,7 +12996,7 @@ void setupWebServer() {
       }
       resetTftAutoSwitchTimer();
 
-      // The port can be null if NaN resulted in JS.
+      // Port bywa null, jeĹ›li w JS wyszedĹ‚ NaN
       if (doc["cluster_port"].is<int>()) {
         clusterPort = doc["cluster_port"].as<int>();
       } else {
@@ -13172,8 +13026,8 @@ void setupWebServer() {
       
       server->send(200, "application/json", "{\"status\":\"ok\",\"action\":\"restart\"}");
       
-      // In AP mode (wifiConnected=false), we can never switch to STA mode without a restart.
-      // A restart is the most reliable option and simplifies the workflow.
+      // W trybie AP (wifiConnected=false) bez restartu nigdy nie przejdziemy na STA.
+      // Restart jest najpewniejszy i upraszcza flow.
       Serial.println("Configuration saved. Restarting shortly....");
       requestRestart(1500);
     } else {
@@ -13181,7 +13035,7 @@ void setupWebServer() {
     }
   });
   
- // API - Reset touch calibration to default values
+  // API - resetuj kalibrację dotyku do wartości domyślnych
   server->on("/api/reset_touch", HTTP_POST, []() {
     touchXMin = TOUCH_X_MIN;
     touchXMax = TOUCH_X_MAX;
@@ -13199,7 +13053,7 @@ void setupWebServer() {
     server->send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
-  // API - Reset TFT rotation to default values
+  // API - resetuj rotację TFT do wartości domyślnych
   server->on("/api/reset_tft_rotation", HTTP_POST, []() {
     tftRotation = 1;
     applyTftRotation();
@@ -13210,7 +13064,7 @@ void setupWebServer() {
     requestRestart(1500);
   });
   
-  // API - Get configuration
+  // API - pobierz konfigurację
   server->on("/api/config", HTTP_GET, []() {
     StaticJsonDocument<4096> doc;
     doc["wifi_ssid"] = wifiSSID;
@@ -13274,7 +13128,7 @@ void setupWebServer() {
     doc["led_alert_blink_ms"] = ledAlertBlinkMs;
     doc["aprs_interval_min"] = aprsIntervalMinutes;
     
-    // Touch calibration mode - priority: full combination > rotations > swap > both > single invert
+    // Touch calibration mode - priorytet: pełna kombinacja > rotacje > swap > both > single invert
     String touchMode = "none";
     if (touchSwapXY && touchInvertX && touchInvertY) {
       touchMode = "xy_both";
@@ -13354,9 +13208,6 @@ void uiTaskLoop(void *parameter) {
 
       if (pendingScreen1 && currentScreen == SCREEN_HAM_CLOCK && !inMenu && !aprsAlertScreenActive) {
         drawScreen(SCREEN_HAM_CLOCK);
-      }
-      if (pendingScreen1 && currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
-        drawScreen(SCREEN_HAM_CLOCK2);
       }
       if (pendingScreen2 && currentScreen == SCREEN_DX_CLUSTER && !inMenu && !aprsAlertScreenActive) {
         drawScreen(SCREEN_DX_CLUSTER);
@@ -13477,12 +13328,12 @@ void uiTaskLoop(void *parameter) {
 // ========== SETUP & LOOP ==========
 
 void setup() {
-  // This log goes "kana" (usually the same as the bootlog),
-  // So, it allows you to check whether the application starts up at all.
+  // Ten log idzie "kana" (zwykle tym samym co bootlog),
+  // wiÄ™c pozwala sprawdziÄ‡ czy aplikacja w ogĂłle startuje.
   esp_rom_printf("\nAPP: setup() start\n");
 
   Serial.begin(115200);
-  // On the ESP32-C3 (especially with USB CDC), it is worth waiting a moment for the serial monitor.
+  // Na ESP32-C3 (zwłaszcza z USB CDC) warto chwilę poczekać na monitor portu
   unsigned long serialWaitStart = millis();
   while (!Serial && (millis() - serialWaitStart) < 2000) {
     delay(10);
@@ -13490,7 +13341,7 @@ void setup() {
   delay(200);
   esp_rom_printf("APP: Serial.begin done\n");
 
-  // Allow a moment for WiFi/PHY to stabilize after a reset (especially on the "Super Mini").
+  // Daj chwilÄ™ na ustabilizowanie WiFi/PHY po resecie (zwĹ‚aszcza na "Super Mini")
   delay(300);
 
   if (dxSpotsMutex == nullptr) {
@@ -13506,8 +13357,8 @@ void setup() {
   initStatusRgbLed();
   updateStatusRgbLed();
   
-  // TFT Display (ESP32-2432S028) – Initialization at Startup (as in the reference project)
-  // The TFT should be initialized immediately after Serial.begin(), before other peripherals.
+  // WyĹ›wietlacz TFT (ESP32-2432S028) â€“ inicjalizacja NA POCZÄ„TKU (jak w projekcie referencyjnym)
+  // TFT powinien byÄ‡ inicjalizowany zaraz po Serial.begin(), przed innymi peryferiami
 #ifdef ENABLE_TFT_DISPLAY
   initTFT();
   yield();
@@ -13530,15 +13381,15 @@ void setup() {
   }
 
   bootLogLine("");
-  bootLogLine("BARC ESP32 ham clock module");
+  bootLogLine("ESP32 DX Cluster Receiver");
   bootLogLine("==============================");
   
-  // DIAGNOSTICS: Check if ENABLE_TFT_DISPLAY is defined.
+  // DIAGNOSTYKA: Sprawdź czy ENABLE_TFT_DISPLAY jest zdefiniowane
 #ifdef ENABLE_TFT_DISPLAY
   bootLogLine("ENABLE_TFT_DISPLAY - init TFT");
 #else
-  bootLogLine("NOTE: ENABLE_TFT_DISPLAY is NOT defined – TFT will not work!");
-  bootLogLine("Ensure that you are compiling for the 'esp32-2432s028' environment.");
+  bootLogLine("UWAGA: ENABLE_TFT_DISPLAY NIE jest zdefiniowane - TFT dont work!");
+  bootLogLine("Upewnij sie, że kompilujesz dla środowiska 'esp32-2432s028'");
 #endif
   yield();
 
@@ -13728,7 +13579,7 @@ void loop() {
   yield();
 
 
-  // Delayed restart (to ensure the HTTP response is sent)
+  // Odroczony restart (ĹĽeby odpowiedĹş HTTP zdÄ…ĹĽyĹ‚a wyjĹ›Ä‡)
   if (restartRequested && (long)(millis() - restartAtMs) >= 0) {
     LOGV_PRINTLN("[LOOP] Restart requested - restarting...");
     delay(50);
