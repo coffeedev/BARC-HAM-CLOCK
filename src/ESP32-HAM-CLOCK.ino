@@ -1183,7 +1183,7 @@ void updateTFT_IP() {
   IPAddress ip;
   String modeStr = "";
   
-  // SprawdĹş czy jesteĹ›my w trybie STA czy AP
+  // Check if we are in STA or AP mode
   if (wifiConnected && WiFi.status() == WL_CONNECTED) {
     ip = WiFi.localIP();
     modeStr = "WiFi";
@@ -1191,7 +1191,7 @@ void updateTFT_IP() {
     ip = WiFi.softAPIP();
     modeStr = "AP Mode";
   } else {
-    // Brak IP - wyświetl komunikat
+    // No IP — display message
     tft.fillRect(10, 40, 300, 20, TFT_WHITE);
     tft.setTextColor(TFT_RED, TFT_WHITE);
     tft.setTextSize(1);
@@ -1200,22 +1200,22 @@ void updateTFT_IP() {
     return;
   }
   
-  // WyczyĹ›Ä‡ obszar IP (dla rotacji 1: szerokoĹ›Ä‡ 320)
+  // Clear IP area (for rotation 1: width 320)
   tft.fillRect(10, 40, 300, 20, TFT_BLACK);
   
-  // WyĹ›wietl tryb i IP w jednej linii (oszczędność miejsca)
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+  // Display mode and IP on a single line (space-saving)
+  tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.setTextSize(1);
   tft.setCursor(10, 45);
   tft.print(modeStr);
   tft.print(": ");
   
-  // Wyświetl IP
+  // Display IP
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.print(ip.toString());
 }
 
-// Aktualizuj wyĹ›wietlacz z tabelą spotów (podobnie jak na stronie WWW)
+// Update the display with the spots table (similar to the website)
 void updateTFT_Spots() {
   static unsigned long lastTFTPrint = 0;
   static int tftCallCount = 0;
@@ -1225,10 +1225,10 @@ void updateTFT_Spots() {
     return;
   }
   
-  // Print co 10 wywołań (dla debugowania)
+ // Print every 10 calls (for debugging)
   unsigned long now = millis();
   if (now - lastTFTPrint > 10000) { // Co 10 sekund
-    Serial.print("[TFT] updateTFT_Spots wywoĹ‚ane ");
+    Serial.print("[TFT] updateTFT_Spots called ");
     Serial.print(tftCallCount);
     Serial.print(" razy, spotCount=");
     Serial.println(spotCount);
@@ -1236,16 +1236,16 @@ void updateTFT_Spots() {
     tftCallCount = 0;
   }
   
-  // WyczyĹ›Ä‡ obszar tabeli (zostaw nagĹ‚Ăłwek i IP)
-  // Dla rotacji 1 (krajobraz): szerokoĹ›Ä‡ 320, wysokoĹ›Ä‡ 240
-  // Zostaw miejsce na nagĹ‚Ăłwek (0-45) i tabelÄ™ (65-240)
+  // Clear the table area (leave the header and IP)
+  // For rotation 1 (landscape): width 320, height 240
+  // Leave space for the header (0-45) and the table (65-240)
     tft.fillRect(0, 65, 320, 175, TFT_WHITE);
   
-  // WyĹ›wietl nagĹ‚Ăłwek tabeli
+  // Display table header
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.setTextSize(1);
   
-  // Nagłówki kolumn (dla szerokoĹ›ci 320px)
+  // Column headers (for a width of 320px)
   int yPos = 65;
   tft.setCursor(5, yPos);
   tft.print(tr(TR_TIME_SHORT));
@@ -1260,11 +1260,11 @@ void updateTFT_Spots() {
   
   yPos += 15;
   
-  // Wyświetl maksymalnie 10 spotĂłw na wyĹ›wietlaczu TFT (ĹĽeby zmieścić się na ekranie)
+  // Display a maximum of 10 spots on the TFT display (to fit on the screen)
   int maxDisplaySpots = min(spotCount, 10);
   
   for (int i = 0; i < maxDisplaySpots; i++) {
-    if (yPos >= 230) break; // Nie wchodź poza ekran
+    if (yPos >= 230) break; // Do not go off-screen
     
     tft.setTextColor(TFT_BLACK, TFT_WHITE);
     tft.setTextSize(1);
@@ -1805,7 +1805,7 @@ void updateScreen1Header() {
   int startX = 25; // Left offset (space for menu icon)
   int textY = 12;
 
-  tft.fillRect(startX, textY - 4, 65, 22, TFT_BLACK);
+  tft.fillRect(startX, textY - 4, 55, 22, TFT_BLACK);
   tft.setTextColor(TFT_RADIO_ORANGE);
   tft.setTextSize(2);
   tft.setCursor(startX + 4, textY);
@@ -1813,19 +1813,20 @@ void updateScreen1Header() {
 
   tft.setTextColor(TFT_BLACK);
   tft.setCursor(startX + 75, textY);
-  tft.print("-HAM-");
+  tft.print("- HAM -");
+  tft.setCursor(startX + 76, textY); // A slight 1px lateral shift creates a "Bold" effect.
+  tft.print("- HAM -");
 
-  int clockX = startX + 145;
+  int clockX = startX + 170;
   tft.setCursor(clockX, textY);
   tft.print("CLOCK");
-  tft.setCursor(clockX + 1, textY); // Lekkie przesuniÄ™cie o 1px w bok daje efekt "Bold"
+  tft.setCursor(clockX + 1, textY); // A slight 1px lateral shift creates a "Bold" effect.
   tft.print("CLOCK");
 
-  // 3. OZDOBNIK GRAFICZNY (Fale radiowe)
+  // 3. GRAPHIC ORNAMENT (Radio Waves)
   for(int i = 0; i < 3; i++) {
     tft.drawCircle(300, 20, 4 + (i * 4), TFT_BLACK);
   }
-
   screen1HeaderNeedsRedraw = false;
 }
 
@@ -1928,11 +1929,11 @@ void drawHamClock() {
 }
 
 void updateScreen1Header2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK || inMenu) {
+  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK2 || inMenu) {
     return;
   }
 
-  if (!screen1HeaderNeedsRedraw) {
+ if (!screen1HeaderNeedsRedraw) {
     return;
   }
 
@@ -1946,22 +1947,31 @@ void updateScreen1Header2() {
 
   // 2. "LOGO" Formatting
   
-  int startX = 25; // Left offset (space for menu icon)
+  int startX = 70; // Left offset (space for menu icon)
   int textY = 12;
 
-  tft.fillRect(startX, textY - 4, 65, 22, TFT_BLACK);
-  tft.setTextColor(TFT_RADIO_ORANGE);
+  //tft.fillRect(startX, textY - 4, 55, 22, TFT_BLACK);
+  String textForHeader = "Local & UTC Time" ;
+  tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
-  tft.setCursor(startX + 6, textY);
-  tft.print("BARC");
+  tft.setCursor(startX, textY);
+  tft.print(textForHeader);
+  tft.setCursor(startX + 1, textY);
+  tft.print(textForHeader);
 
-  int clockX = startX + 145;
-  tft.setCursor(clockX, textY);
-  tft.print("CLOCK");
-  tft.setCursor(clockX + 1, textY); // Lekkie przesuniÄ™cie o 1px w bok daje efekt "Bold"
-  tft.print("CLOCK");
+  //tft.setTextColor(TFT_BLACK);
+  //tft.setCursor(startX + 75, textY);
+  //tft.print("-HAM-");
+
+  //int clockX = startX + 145;
+  //tft.setCursor(clockX, textY);
+  //tft.print("CLOCK");
+  //tft.setCursor(clockX + 1, textY); // A slight 1px lateral shift creates a "Bold" effect.
+  //tft.print("CLOCK");
 
   screen1HeaderNeedsRedraw = false;
+
+  //updateScreen1Header2
 }
 
 void drawHamClock2() {
@@ -1974,19 +1984,55 @@ void drawHamClock2() {
 
   // 2. Main Frame
   tft.drawRoundRect(10, 50, 300, 155, 8, TFT_DARKGREY);
+
+  // 5. BOTTOM BAR – IP Address Only
+  IPAddress ip;
+  bool connected = false;
+  if (wifiConnected && WiFi.status() == WL_CONNECTED) {
+    ip = WiFi.localIP();
+    connected = true;
+  } else if (WiFi.getMode() & WIFI_AP) {
+    ip = WiFi.softAPIP();
+    connected = true;
+  }
+
+  if (connected) {
+    tft.setTextColor(TFT_LIGHTGREY);
+    tft.setTextSize(2);
+    String ipStr = ip.toString();
+    int ipX = (320 - (ipStr.length() * 12)) / 2;
+    tft.setCursor(ipX, 215);
+    tft.print(ipStr);
+    
+    // Small green connection indicator
+    tft.fillCircle(50, 222, 4, TFT_GREEN);
+  } else {
+    tft.setTextColor(TFT_RED);
+    tft.setTextSize(2);
+    tft.setCursor(80, 215);
+    tft.print("NO CONNECTION");
+    tft.fillCircle(50, 222, 4, TFT_RED);
+  }
+
+      // 4. SCREEN CHANGE ARROWS (Navigation)
+  // Left arrow (Triangle: x1, y1, x2, y2, x3, y3, color)
+  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
+  
+  // Right arrow
+  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
   
  	
  //End of drawHamClock2
 }
 
 void updateScreen1Clock2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK || inMenu) {
+  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK2 || inMenu) {
     return;
   }
 
   static unsigned long lastClockRedrawMs = 0;
   unsigned long now = millis();
-  if (lastClockRedrawMs != 0 && (now - lastClockRedrawMs) < DX_SCREEN_MIN_REDRAW_MS) {
+  if (lastClockRedrawMs != 0 && (now - lastClockRedrawMs) < 1000L) {
     return;
   }
 
@@ -1998,16 +2044,18 @@ void updateScreen1Clock2() {
   struct tm timeinfo;
   const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
   configTime(timezoneOffsetSec, 0, "pool.ntp.org");
+  char current[9];
+  String timeLocal = "" ;
   if (!getLocalTime(&timeinfo)) 
   {
     Serial.println("getTimeWithTimeZone failed. returning") ;
-    //return;
+    timeLocal = String("--:--:--") ;
   }
-  
-  char current[9];
-  strftime(current, 9, "%H:%M:%S", &timeinfo);
-  String timeLocal = String(current) ;
-
+  else
+  {
+    strftime(current, 9, "%H:%M:%S", &timeinfo);
+    timeLocal = String(current) ;
+  }
   
   // Use the same coordinates as in draw HamClock() – confine to the frame area.
   int frameX = 10;        // Start of main frame
@@ -2039,13 +2087,13 @@ void updateScreen1Clock2() {
   int labelWidth = (int)strlen(timeLabelUTC) * 6;
   int labelX = frameX + (frameWidth - labelWidth) / 2;
   tft.setTextSize(1);
-  tft.setCursor(labelX, 55);
+  tft.setCursor(labelX, 60);
   tft.print(timeLabelUTC);
 
   // Display UTC clock
   
   tft.setTextSize(4);
-  tft.setCursor(timeX, 70);
+  tft.setCursor(timeX, 75);
   tft.print(timeUTC);
 
     // Display Local
@@ -2055,16 +2103,18 @@ void updateScreen1Clock2() {
   labelWidth = (int)strlen(timeLabelLOCAL) * 6;
   labelX = frameX + (frameWidth - labelWidth) / 2;
   tft.setTextSize(1);
-  tft.setCursor(labelX, 105);
+  tft.setCursor(labelX, 130);
   tft.print(timeLabelLOCAL);
 
   // Display Local clock
   
   tft.setTextSize(4);
-  tft.setCursor(timeX, 120);
+  tft.setCursor(timeX, 145);
   tft.print(timeLocal);
 
   lastClockRedrawMs = now;
+
+  //updateScreen1Clock2
 }
 
 void updateScreen1Clock() {
@@ -2164,7 +2214,7 @@ void updateScreen2Clock() {
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  // WyczyĹ›Ä‡ tylko obszar godziny w nagĹ‚Ăłwku (pomaraĹ„czowy pasek)
+  // Clear only the time area in the header (orange bar)
   tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
@@ -13409,6 +13459,15 @@ void uiTaskLoop(void *parameter) {
         updateScreen1Date();
       }
 
+      if (tftInitialized && currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
+        if (now - lastScreen1UpdateMs > 1000) {
+          updateScreen1Clock2();
+          lastScreen1UpdateMs = now;
+        }
+        updateScreen1Header2();
+        //updateScreen1Date();
+      }
+
       if (tftInitialized && currentScreen == SCREEN_DX_CLUSTER && !inMenu && !aprsAlertScreenActive) {
         if (now - lastScreenUpdate > 100) {
           updateScreen2Data();
@@ -13593,12 +13652,12 @@ void setup() {
   String ipStr = wifiConnected ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
   bootLogLine("IP: " + ipStr);
   
-  // Aktualizuj wyĹ›wietlacz TFT (ekran startowy)
+  // Update TFT display (splash screen)
 #ifdef ENABLE_TFT_DISPLAY
   drawWelcomeScreenYellow();
-  delay(4000);
+  delay(2000);
   drawWelcomeScreenGreen();
-  delay(3000);
+  delay(1000);
   bootSequenceActive = false;
   drawScreen(currentScreen);
   resetTftAutoSwitchTimer();
