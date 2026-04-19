@@ -2,6 +2,10 @@
  * BARC-HAM-CLOCK - 
  * Original author SP3KON
  * Modifications by VU3GWN
+ * 
+# New features in v1.7.0
+1. Removed seconds in Local/UTC time
+2. More clean up
  
 # New features in v1.6.0
 1. Added second clock screen
@@ -28,12 +32,12 @@
 */
 
 
-enum ScreenType : uint8_t;    // pełna definicja niżej
+enum ScreenType : uint8_t;    // full definition below
 enum Screen6ViewMode : uint8_t;
-struct DXSpot;                // pełna definicja niżej
-struct APRSStation;           // pełna definicja niżej
-struct AprsWxDecoded;         // pełna definicja niżej
-struct PropagationData;       // pełna definicja niżej
+struct DXSpot;                // full definition below
+struct APRSStation;           // full definition below
+struct AprsWxDecoded;         // full definition below
+struct PropagationData;       // full definition below
 
 // Forward declarations for UnlisHunter state used before global definitions.
 extern bool unlisRunning;
@@ -949,7 +953,7 @@ String openWebRxUrl = DEFAULT_OPENWEBRX_URL;
 String tft_dim_start = "" ;
 String tft_dim_stop = "" ;
 
-// Konfiguracja filtrĂłw CC-Cluster (dxspots.com)
+// CC-Cluster (dxspots.com) Filter Configuration
 bool clusterNoAnnouncements = true;      // set/noann - wyłącz ogłoszenia
 bool clusterNoWWV = true;                // set/nowwv - wyłącz WWV
 bool clusterNoWCY = true;                // set/nowcy - wyłącz WCY
@@ -1075,8 +1079,8 @@ void applyTftInversion() {
 void initTFT() {
   Serial.println("=== Initialization of TFT ===");
   
-  // Backlight włączany automatycznie przez tft.begin() (zgodnie z Setup801)
-  // Nie trzeba ręcznie włączać backlight przed begin()
+  // Backlight enabled automatically by tft.begin() (in accordance with Setup801)
+  // No need to manually enable the backlight before begin()
   Serial.println("TFT begin()...");
   tft.begin();
   Serial.println("TFT begin() OK");
@@ -1085,10 +1089,10 @@ void initTFT() {
   
   applyTftRotation();
   applyTftInversion();
-  // Dla rotacji 1: szerokości 320, wysokości 240
+  // For rotation 1: width 320, height 240
   tft.fillScreen(TFT_WHITE);
 
-  // Inicjalizacja dotyku (XPT2046, osobny SPI)
+  // Touch initialization (XPT2046, separate SPI)
   touchSPI.begin(TOUCH_CLK, TOUCH_MISO, TOUCH_MOSI, TOUCH_CS);
   touch.begin(touchSPI);
   applyTouchRotation();
@@ -1099,7 +1103,7 @@ void initTFT() {
   
   Serial.println("=== TFT Initialization OK ===");
   
-  // Wyświetl ekran startowy (boot log)
+  // Display startup screen (boot log)
   drawBootScreen();
   tftBootPrintLine("=== Initialization of TFT ===");
   tftBootPrintLine("TFT begin()...");
@@ -1243,7 +1247,7 @@ void updateTFT_Spots() {
     tft.fillRect(0, 65, 320, 175, TFT_WHITE);
   
   // Display table header
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+  tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.setTextSize(1);
   
   // Column headers (for a width of 320px)
@@ -1412,10 +1416,10 @@ void applyMenuThemeFromHue() {
   menuThemeColor = colorWheel(menuThemeHue);
 }
 
-// Definicja koloru "Radio Orange" - dynamiczny motyw
-#define TFT_RADIO_ORANGE menuThemeColor
+// Definition of the "Radio Orange" color – dynamic theme
+#define TFT_RADIO_THEME menuThemeColor
 
-// Kolory i tĹ‚o "Matrix" dla ekranu 10
+// Colors and "Matrix" background for screen 10
 #define MATRIX_DARKGREEN 0x0320
 #define MATRIX_BRIGHTGREEN 0x07E0
 #define MATRIX_WHITEGREEN 0xAFE5
@@ -1797,7 +1801,7 @@ void updateScreen1Header() {
   const int headerH = 40;
   
   // 1. LOGO BACKGROUND AND FRAME
-  tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_ORANGE);
+  tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_THEME);
   // Darker bottom edge for a 3D effect
   tft.drawFastHLine(0, headerH - 1, 320, 0x8410); 
 
@@ -1807,7 +1811,7 @@ void updateScreen1Header() {
   int textY = 12;
 
   tft.fillRect(startX, textY - 4, 55, 22, TFT_BLACK);
-  tft.setTextColor(TFT_RADIO_ORANGE);
+  tft.setTextColor(TFT_RADIO_THEME);
   tft.setTextSize(2);
   tft.setCursor(startX + 4, textY);
   tft.print("BARC");
@@ -1853,7 +1857,7 @@ void drawHamClock() {
 
   // Write "OPERATOR STATION"
   tft.setTextSize(1);
-  tft.setTextColor(TFT_RADIO_ORANGE);
+  tft.setTextColor(TFT_RADIO_THEME);
   tft.setCursor(110, 105);
   tft.print("OPERATOR STATION");
 
@@ -1921,10 +1925,10 @@ void drawHamClock() {
   }
     // 4. SCREEN CHANGE ARROWS (Navigation)
   // Left arrow (Triangle: x1, y1, x2, y2, x3, y3, color)
-  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_THEME);
   
   // Right arrow
-  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_THEME);
   
   //End of drawHamClock
 }
@@ -1942,7 +1946,7 @@ void updateScreenHeadForTwoClocks() {
   const int headerH = 40;
   
   // 1. LOGO BACKGROUND AND FRAME
-  tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_ORANGE);
+  tft.fillRect(0, headerY, 320, headerH, TFT_RADIO_THEME);
   // Darker bottom edge for a 3D effect
   tft.drawFastHLine(0, headerH - 1, 320, 0x8410); 
 
@@ -2017,10 +2021,10 @@ void drawTwoClocks() {
 
       // 4. SCREEN CHANGE ARROWS (Navigation)
   // Left arrow (Triangle: x1, y1, x2, y2, x3, y3, color)
-  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_THEME);
   
   // Right arrow
-  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_THEME);
   
  	
  //End of drawTwoClocks
@@ -2213,12 +2217,12 @@ void updateScreen2Clock() {
   }
 
   char timeBuffer[10];
-  strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+  strftime(timeBuffer, 10, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
   // Clear only the time area in the header (orange bar)
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -2506,7 +2510,7 @@ void updateScreen2Data() {
         tableSprite->setCursor(182, yPos);
         tableSprite->print(spots[i].mode);
 
-        tableSprite->setTextColor(TFT_RADIO_ORANGE);
+        tableSprite->setTextColor(TFT_RADIO_THEME);
         tableSprite->setCursor(212, yPos);
         String countryText = formatDistanceOrCountry(spots[i], COUNTRY_COL_MAX_LEN);
         tableSprite->print(countryText);
@@ -2608,7 +2612,7 @@ void updateScreen2Data() {
       tft.setCursor(182, yPos);
       tft.print(spots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(spots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -2631,7 +2635,7 @@ void updateScreen2Data() {
 void drawPotaCluster() {
   // Use the same coordinates as in drawHamClock() — confine to the frame area.
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   drawHamburgerMenuButton3D(5, 7);
@@ -2639,12 +2643,14 @@ void drawPotaCluster() {
   tft.setTextSize(2);
   tft.setCursor(35, 8);
   tft.print("POTA.app");
+  tft.setCursor(35+1, 8);
+  tft.print("POTA.app");
   
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[10];
-    strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+    strftime(timeBuffer, 10, "%H:%M", &timeinfo);
     int timeWidth = strlen(timeBuffer) * 12;
     tft.setCursor(315 - timeWidth, 8);
     tft.print(timeBuffer);
@@ -2727,7 +2733,7 @@ void drawPotaCluster() {
       tft.setCursor(182, yPos);
       tft.print(potaSpots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(potaSpots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -2761,11 +2767,11 @@ void updateScreen7Clock() {
   }
 
   char timeBuffer[10];
-  strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+  strftime(timeBuffer, 10, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -2926,7 +2932,7 @@ void updateScreen7Data() {
         tableSprite->setCursor(182, yPos);
         tableSprite->print(potaSpots[i].mode);
 
-        tableSprite->setTextColor(TFT_RADIO_ORANGE);
+        tableSprite->setTextColor(TFT_RADIO_THEME);
         tableSprite->setCursor(212, yPos);
         String countryText = formatDistanceOrCountry(potaSpots[i], COUNTRY_COL_MAX_LEN);
         tableSprite->print(countryText);
@@ -3033,7 +3039,7 @@ void updateScreen7Data() {
       tft.setCursor(182, yPos);
       tft.print(potaSpots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(potaSpots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -3080,7 +3086,7 @@ static String formatHamalertTftTime(const String &rawTime) {
 void drawHamalertCluster() {
   tft.fillScreen(TFT_BLACK);
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   drawHamburgerMenuButton3D(5, 7);
@@ -3088,11 +3094,13 @@ void drawHamalertCluster() {
   tft.setTextSize(2);
   tft.setCursor(35, 8);
   tft.print("HAMALERT.org");
+  tft.setCursor(35+1, 8);
+  tft.print("HAMALERT.org");
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[10];
-    strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+    strftime(timeBuffer, 10, "%H:%M", &timeinfo);
     int timeWidth = strlen(timeBuffer) * 12;
     tft.setCursor(315 - timeWidth, 8);
     tft.print(timeBuffer);
@@ -3175,7 +3183,7 @@ void drawHamalertCluster() {
       tft.setCursor(182, yPos);
       tft.print(hamalertSpots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(hamalertSpots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -3205,11 +3213,11 @@ void updateScreen8Clock() {
   }
 
   char timeBuffer[10];
-  strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+  strftime(timeBuffer, 10, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -3364,7 +3372,7 @@ void updateScreen8Data() {
       tft.setCursor(182, yPos);
       tft.print(hamalertSpots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(hamalertSpots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -3822,26 +3830,28 @@ void handleTouchNavigation() {
     }
   }
 }
-// Ekran 2: DX Cluster
+// Screen 2: DX Cluster
 void drawDxCluster() {
   tft.fillScreen(TFT_BLACK);
 
-  // 1. NAGĹĂ“WEK: Belka z menu, nazwÄ… klastra i czasem UTC
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  // 1. HEADER: Bar containing the menu, cluster name, and UTC time
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
-// IKONA MENU (3D)
+// MENU ICON (3D)
 drawHamburgerMenuButton3D(5, 7);
 
-// Nazwa klastra - przesuniÄ™ta w prawo (x=35 zamiast 5), by zrobiÄ‡ miejsce na menu
+// Cluster name – shifted to the right (x=35 instead of 5) to make room for the menu.
 tft.setTextSize(2);
 tft.setCursor(35, 8);
+tft.print(clusterHost);
+tft.setCursor(35+1, 8);
 tft.print(clusterHost);
   
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[10];
-    strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+    strftime(timeBuffer, 10, "%H:%M", &timeinfo);
     int timeWidth = strlen(timeBuffer) * 12;
     tft.setCursor(315 - timeWidth, 8);
     tft.print(timeBuffer);
@@ -3919,7 +3929,7 @@ tft.print(clusterHost);
       tft.setCursor(182, yPos);
       tft.print(spots[i].mode);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(212, yPos);
       String countryText = formatDistanceOrCountry(spots[i], COUNTRY_COL_MAX_LEN);
       tft.print(countryText);
@@ -3959,10 +3969,10 @@ void drawHamburgerMenuButton3D(int x, int y) {
   const int btnY = y - pad;
   const int btnW = iconW + (pad * 2);
   const int btnH = iconH + (pad * 2);
-  const uint16_t edgeLight = lerpColor565(TFT_WHITE, TFT_RADIO_ORANGE, 140);
-  const uint16_t edgeShadow = lerpColor565(TFT_BLACK, TFT_RADIO_ORANGE, 115);
+  const uint16_t edgeLight = lerpColor565(TFT_WHITE, TFT_RADIO_THEME, 140);
+  const uint16_t edgeShadow = lerpColor565(TFT_BLACK, TFT_RADIO_THEME, 115);
 
-  tft.fillRoundRect(btnX, btnY, btnW, btnH, 3, TFT_RADIO_ORANGE);
+  tft.fillRoundRect(btnX, btnY, btnW, btnH, 3, TFT_RADIO_THEME);
   tft.drawRoundRect(btnX, btnY, btnW, btnH, 3, edgeLight);
   tft.drawLine(btnX + 1, btnY + btnH - 1, btnX + btnW - 2, btnY + btnH - 1, edgeShadow);
   tft.drawLine(btnX + btnW - 1, btnY + 1, btnX + btnW - 1, btnY + btnH - 2, edgeShadow);
@@ -3980,10 +3990,10 @@ static void drawScreen6ViewToggleButton3D(int x, int y, Screen6ViewMode mode) {
   const int btnY = y - pad;
   const int btnW = iconW + (pad * 2);
   const int btnH = iconH + (pad * 2);
-  const uint16_t edgeLight = lerpColor565(TFT_WHITE, TFT_RADIO_ORANGE, 140);
-  const uint16_t edgeShadow = lerpColor565(TFT_BLACK, TFT_RADIO_ORANGE, 115);
+  const uint16_t edgeLight = lerpColor565(TFT_WHITE, TFT_RADIO_THEME, 140);
+  const uint16_t edgeShadow = lerpColor565(TFT_BLACK, TFT_RADIO_THEME, 115);
 
-  tft.fillRoundRect(btnX, btnY, btnW, btnH, 3, TFT_RADIO_ORANGE);
+  tft.fillRoundRect(btnX, btnY, btnW, btnH, 3, TFT_RADIO_THEME);
   tft.drawRoundRect(btnX, btnY, btnW, btnH, 3, edgeLight);
   tft.drawLine(btnX + 1, btnY + btnH - 1, btnX + btnW - 2, btnY + btnH - 1, edgeShadow);
   tft.drawLine(btnX + btnW - 1, btnY + 1, btnX + btnW - 1, btnY + btnH - 2, edgeShadow);
@@ -4167,7 +4177,7 @@ static void drawAprsRadarBody() {
   tft.setCursor(ringLabelX, ring50Y);
   tft.print(ring50Text);
 
-  tft.fillCircle(centerX, centerY, 4, TFT_RADIO_ORANGE);
+  tft.fillCircle(centerX, centerY, 4, TFT_RADIO_THEME);
 
   int order[MAX_APRS_DISPLAY_LCD];
   int displayCount = 0;
@@ -4219,7 +4229,7 @@ static void drawAprsRadarBody() {
 }
 
 void drawFilterTile(int x, int y, int w, int h, const char *label, bool active) {
-  uint16_t fill = active ? TFT_RADIO_ORANGE : TFT_DARKGREY;
+  uint16_t fill = active ? TFT_RADIO_THEME : TFT_DARKGREY;
   uint16_t text = active ? TFT_BLACK : TFT_WHITE;
   tft.fillRect(x, y, w, h, fill);
   tft.drawRect(x, y, w, h, TFT_BLACK);
@@ -4236,7 +4246,7 @@ static void drawScreen6MenuCheckButton(int x, int y, const char *label, bool che
   const int boxSize = 18;
   tft.drawRect(x, y, boxSize, boxSize, TFT_WHITE);
   if (checked) {
-    tft.fillRect(x + 4, y + 4, boxSize - 8, boxSize - 8, TFT_RADIO_ORANGE);
+    tft.fillRect(x + 4, y + 4, boxSize - 8, boxSize - 8, TFT_RADIO_THEME);
   } else {
     tft.fillRect(x + 1, y + 1, boxSize - 2, boxSize - 2, TFT_BLACK);
   }
@@ -4739,7 +4749,7 @@ void drawBrightnessSlider() {
   tft.drawRect(sliderX, sliderY, sliderW, sliderH, TFT_WHITE);
   int fillW = (brightnessMenuValue * (sliderW - 2)) / 100;
   tft.fillRect(sliderX + 1, sliderY + 1, sliderW - 2, sliderH - 2, TFT_BLACK);
-  tft.fillRect(sliderX + 1, sliderY + 1, fillW, sliderH - 2, TFT_RADIO_ORANGE);
+  tft.fillRect(sliderX + 1, sliderY + 1, fillW, sliderH - 2, TFT_RADIO_THEME);
 
   int knobX = sliderX + (brightnessMenuValue * (sliderW - knobW)) / 100;
   tft.fillRect(knobX, sliderY - 4, knobW, sliderH + 8, TFT_WHITE);
@@ -4831,19 +4841,19 @@ void drawTouchCalibrationScreen() {
   if (touchCalStep == 0) {
     tft.setCursor(40, centerY);
     tft.print("Touch target 1/4 (top-left)");
-    drawTouchCalTarget(20, 20, TFT_RADIO_ORANGE);
+    drawTouchCalTarget(20, 20, TFT_RADIO_THEME);
   } else if (touchCalStep == 1) {
     tft.setCursor(35, centerY);
     tft.print("Touch target 2/4 (top-right)");
-    drawTouchCalTarget(300, 20, TFT_RADIO_ORANGE);
+    drawTouchCalTarget(300, 20, TFT_RADIO_THEME);
   } else if (touchCalStep == 2) {
     tft.setCursor(30, centerY);
     tft.print("Touch target 3/4 (bottom-right)");
-    drawTouchCalTarget(300, 220, TFT_RADIO_ORANGE);
+    drawTouchCalTarget(300, 220, TFT_RADIO_THEME);
   } else if (touchCalStep == 3) {
     tft.setCursor(35, centerY);
     tft.print("Touch target 4/4 (bottom-left)");
-    drawTouchCalTarget(20, 220, TFT_RADIO_ORANGE);
+    drawTouchCalTarget(20, 220, TFT_RADIO_THEME);
   } else {
     // touchCalStep >= 4 - Review screen
     tft.setCursor(40, centerY);
@@ -5146,7 +5156,7 @@ void updateScreen6Clock() {
   strftime(timeBuffer, 6, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   bool radarMode = (currentScreen == SCREEN_APRS_RADAR);
-  uint16_t topClearColor = radarMode ? TFT_BLACK : TFT_RADIO_ORANGE;
+  uint16_t topClearColor = radarMode ? TFT_BLACK : TFT_RADIO_THEME;
   uint16_t timeColor = radarMode ? TFT_WHITE : TFT_BLACK;
   int timeY = radarMode ? 5 : 8;
 
@@ -5294,7 +5304,7 @@ void updateScreen6Data() {
         if (callText.length() > 8) callText = callText.substring(0, 8);
         tableSprite->print(callText);
 
-        tableSprite->setTextColor(TFT_RADIO_ORANGE);
+        tableSprite->setTextColor(TFT_RADIO_THEME);
         tableSprite->setCursor(198, yPos);
         if (station.hasLatLon && station.distance > 0) {
           tableSprite->print((int)station.distance);
@@ -5340,7 +5350,7 @@ void updateScreen6Data() {
         tableSprite->setCursor(125, yPos);
         tableSprite->print(symbolShort);
 
-        tableSprite->setTextColor(TFT_RADIO_ORANGE);
+        tableSprite->setTextColor(TFT_RADIO_THEME);
         tableSprite->setCursor(200, yPos);
         if (station.hasLatLon && station.distance > 0) {
           tableSprite->print((int)station.distance);
@@ -5420,7 +5430,7 @@ void updateScreen6Data() {
       if (callText.length() > 8) callText = callText.substring(0, 8);
       tft.print(callText);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(198, yPos);
       if (station.hasLatLon && station.distance > 0) {
         tft.print((int)station.distance);
@@ -5466,7 +5476,7 @@ void updateScreen6Data() {
       tft.setCursor(125, yPos);
       tft.print(symbolShort);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(200, yPos);
       if (station.hasLatLon && station.distance > 0) {
         tft.print((int)station.distance);
@@ -5499,16 +5509,18 @@ void drawAprsIs() {
   screen6ViewMode = APRS_VIEW_LIST;
   tft.fillScreen(TFT_BLACK);
 
-  // 1. NAGĹĂ“WEK: Belka z menu, nazwÄ… serwera i czasem UTC
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  // 1. HEADER: Bar with menu, server name, and UTC time
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   // IKONA MENU (3D)
   drawHamburgerMenuButton3D(5, 7);
 
-  // Nazwa serwera APRS-IS - przesuniÄ™ta w prawo (x=35 zamiast 5), by zrobiÄ‡ miejsce na menu
+  // APRS-IS server name – shifted to the right (x=35 instead of 5) to make room for the menu.
   tft.setTextSize(2);
   tft.setCursor(35, 8);
+  tft.print("APRS-IS");
+  tft.setCursor(35+1, 8);
   tft.print("APRS-IS");
   
   struct tm timeinfo;
@@ -5520,7 +5532,7 @@ void drawAprsIs() {
     tft.print(timeBuffer);
   }
 
-  // 2. NAGĹĂ“WKI TABELI
+  // 2. TABLE HEADERS
   int yPos = 40;
   const bool enlarged = isDxTableEnlarged();
   tft.setTextColor(TFT_DARKGREY);
@@ -5539,7 +5551,7 @@ void drawAprsIs() {
   tft.drawFastHLine(0, yPos + 10, 320, TFT_DARKGREY);
   yPos += enlarged ? 20 : 18;
 
-  // 3. LISTA STACJI APRS (10 z paskiem nawigacji, 11 bez)
+  // 3. APRS Station List (10 with navigation bar, 11 without)
   int order[MAX_APRS_DISPLAY_LCD];
   int maxRows = getAprsTableMaxRows();
   int displayCount = 0;
@@ -5562,7 +5574,7 @@ void drawAprsIs() {
       if (callText.length() > 8) callText = callText.substring(0, 8);
       tft.print(callText);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(198, yPos);
       if (station.hasLatLon && station.distance > 0) {
         tft.print((int)station.distance);
@@ -5605,7 +5617,7 @@ void drawAprsIs() {
       tft.setCursor(125, yPos);
       tft.print(symbolShort);
 
-      tft.setTextColor(TFT_RADIO_ORANGE);
+      tft.setTextColor(TFT_RADIO_THEME);
       tft.setCursor(200, yPos);
       if (station.hasLatLon && station.distance > 0) {
         tft.print((int)station.distance);
@@ -5786,11 +5798,11 @@ void updateScreen3Clock() {
   }
 
   char timeBuffer[10];
-  strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+  strftime(timeBuffer, 10, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -5930,19 +5942,21 @@ void updateScreen3Data() {
 void drawSunSpots() {
   tft.fillScreen(TFT_BLACK);
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
-  // brak hamburger menu na ekranie Propagation
+  // Missing hamburger menu on the Propagation screen
 
   tft.setTextSize(2);
   tft.setCursor(35, 8);
+  tft.print("PROPAGATION");
+  tft.setCursor(35+1, 8);
   tft.print("PROPAGATION");
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[10];
-    strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+    strftime(timeBuffer, 10, "%H:%M", &timeinfo);
     int timeWidth = strlen(timeBuffer) * 12;
     tft.setCursor(315 - timeWidth, 8);
     tft.print(timeBuffer);
@@ -5962,11 +5976,11 @@ void updateScreen4Clock() {
   }
 
   char timeBuffer[10];
-  strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+  strftime(timeBuffer, 10, "%H:%M", &timeinfo);
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -6089,7 +6103,7 @@ void updateScreen4Data() {
 void drawBandInfo() {
   tft.fillScreen(TFT_BLACK);
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   int menuX = 8;
@@ -6101,11 +6115,13 @@ void drawBandInfo() {
   tft.setTextSize(2);
   tft.setCursor(35, 8);
   tft.print("HF BAND INFO");
+  tft.setCursor(35+1, 8);
+  tft.print("HF BAND INFO");
 
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[10];
-    strftime(timeBuffer, 10, "%H:%M Z", &timeinfo);
+    strftime(timeBuffer, 10, "%H:%M", &timeinfo);
     int timeWidth = strlen(timeBuffer) * 12;
     tft.setCursor(315 - timeWidth, 8);
     tft.print(timeBuffer);
@@ -6113,8 +6129,8 @@ void drawBandInfo() {
 
   drawBandInfoBody();
 
-  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
-  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_THEME);
+  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_THEME);
   tft.setTextColor(0x52AA);
   tft.setTextSize(1);
   tft.setCursor(125, 226);
@@ -6569,7 +6585,7 @@ void updateScreen5Clock() {
   int timeWidth = strlen(timeBuffer) * 12;
   int timeX = 315 - timeWidth;
 
-  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_ORANGE);
+  tft.fillRect(timeX - 2, 4, timeWidth + 6, 24, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timeX, 8);
@@ -6651,7 +6667,7 @@ uint32_t computeScreen5Signature() {
   return hash;
 }
 
-// Funkcja pomocnicza: Kolor wiatru zaleĹĽny od prÄ™dkoĹ›ci (m/s)
+// Helper function: Wind color based on speed (m/s)
 uint16_t getWindColor(float speed) {
   if (speed < 5.0)  return TFT_GREEN;       // Bezpiecznie
   if (speed < 10.0) return TFT_YELLOW;      // Umiarkowanie
@@ -6659,7 +6675,7 @@ uint16_t getWindColor(float speed) {
   return TFT_RED;                           // Niebezpieczny dla anten
 }
 
-// Mapowanie kodu OWM na plik ikony (zgodnie z przygotowaną listą)
+// Mapping OWM codes to icon files (according to the prepared list)
 String weatherIconPathForId(int id, bool isNight) {
   const String base = "/icon50/";
 
@@ -6697,11 +6713,11 @@ String weatherIconPathForId(int id, bool isNight) {
   return base + "unknown.bmp";
 }
 
-// Funkcja pomocnicza: Rysowanie ikon pogodowych (priorytet: id -> plik BMP, fallback: opis)
+// Helper function: Drawing weather icons (priority: ID -> BMP file; fallback: description)
 void drawWeatherIcon(int x, int y, int weatherId, String desc) {
   desc.toLowerCase();
 
-  // Dzień/noc z ikony OWM (np. 10d/10n). Jeśli brak, fallback na czas lokalny.
+  // Day/night from the OWM icon (e.g., 10d/10n). If missing, fall back to local time.
   bool isNight = false;
   if (weatherData.iconCode.endsWith("n")) {
     isNight = true;
@@ -6716,12 +6732,12 @@ void drawWeatherIcon(int x, int y, int weatherId, String desc) {
 
   String iconFile = weatherIconPathForId(weatherId, isNight);
 
-  // Najpierw próbujemy gotową ikonę BMP
+  // First, we try a ready-made BMP icon.
   if (drawBmpFromFS(iconFile, x - 25, y - 25)) {
     return;
   }
 
-  // Fallback: stare ikonki rysowane na podstawie opisu (gdy brak pliku)
+  // Fallback: old icons drawn based on a description (when the file is missing)
   if (desc.indexOf("slon") >= 0 || desc.indexOf("clear") >= 0 || desc.indexOf("pogod") >= 0) {
     tft.fillCircle(x, y, 18, TFT_YELLOW); // Słonce
     for(int i=0; i<360; i+=45) {
@@ -6774,12 +6790,12 @@ void drawWeatherIcon(int x, int y, int weatherId, String desc) {
   }
 }
 
-// GĹ‚Ăłwna funkcja ciaĹ‚a ekranu pogodowego
+// Main function for the weather screen body
 void drawWeatherBody() {
   const int bodyTop = 32;
   const int bodyBottom = 220;
   
-  // Czyszczenie obszaru roboczego
+// Clearing the workspace
   tft.fillRect(0, bodyTop, 320, bodyBottom - bodyTop, TFT_BLACK);
 
   if (!weatherData.valid) {
@@ -6790,10 +6806,10 @@ void drawWeatherBody() {
     return;
   }
 
-  // 1. IKONA I OPIS (Prawa strona)
+// 1. ICON AND DESCRIPTION (Right side)
   drawWeatherIcon(240, 70, weatherData.weatherId, weatherData.description);
 
-  // Opis pogody z polskimi znakami, czcionka VLW 20px
+  // Weather description with Polish characters, VLW 20px font
   bool fontLoaded = false;
   int descY = 105; // shifted up by 10px
   int descX = 240; // shifted left by 10px
@@ -7105,13 +7121,15 @@ void updateScreen5Data() {
 void drawWeather() {
   tft.fillScreen(TFT_BLACK);
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   drawHamburgerMenuButton3D(5, 7);
 
   tft.setTextSize(2);
   tft.setCursor(35, 8);
+  tft.print(tr(TR_WEATHER));
+  tft.setCursor(35+1, 8);
   tft.print(tr(TR_WEATHER));
 
   struct tm timeinfo;
@@ -7130,7 +7148,7 @@ void drawWeather() {
 void drawWeatherForecast() {
   tft.fillScreen(TFT_BLACK);
 
-  tft.fillRect(0, 0, 320, 32, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 32, TFT_RADIO_THEME);
   tft.setTextColor(TFT_BLACK);
 
   drawHamburgerMenuButton3D(5, 7);
@@ -7274,15 +7292,15 @@ void clearMatrixArea(int bodyTop, int bodyBottom) {
 }
 
 void drawMatrixStatic() {
-  //tft.fillRect(0, 0, 320, SCREEN10_HEADER_H, TFT_RADIO_ORANGE);
+  //tft.fillRect(0, 0, 320, SCREEN10_HEADER_H, TFT_RADIO_THEME);
   //tft.setTextColor(TFT_BLACK);
   //tft.setTextSize(2);
  // tft.setCursor(10, 8);
   //tft.print("ZEGAR");
 
   // StrzaĹ‚ki nawigacyjne na dole ekranu
-  //tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
-  //tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
+  //tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_THEME);
+  //tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_THEME);
   //tft.setTextColor(0x52AA); // Ciemny szary
   //tft.setTextSize(1);
   //tft.setCursor(125, 226);
@@ -7997,10 +8015,10 @@ void drawScreenEmpty(int screenNum) {
 
     // 4. STRZAĹKI ZMIANY EKRANU (Nawigacja)
   // Lewa strzaĹ‚ka (TrĂłjkÄ…t: x1, y1, x2, y2, x3, y3, kolor)
-  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(10, 230, 20, 222, 20, 238, TFT_RADIO_THEME);
   
   // Prawa strzaĹ‚ka
-  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
+  tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_THEME);
   
   // Opcjonalny opis miÄ™dzy strzaĹ‚kami (maĹ‚Ä… czcionkÄ…)
   tft.setTextColor(0x52AA); // Ciemny szary
@@ -8577,7 +8595,7 @@ static void drawAprsAlertFrame(bool pulseOn) {
 }
 
 static void drawAprsAlertCloseButton() {
-  tft.fillRoundRect(APRS_ALERT_CLOSE_BTN_X, APRS_ALERT_CLOSE_BTN_Y, APRS_ALERT_CLOSE_BTN_W, APRS_ALERT_CLOSE_BTN_H, 5, TFT_RADIO_ORANGE);
+  tft.fillRoundRect(APRS_ALERT_CLOSE_BTN_X, APRS_ALERT_CLOSE_BTN_Y, APRS_ALERT_CLOSE_BTN_W, APRS_ALERT_CLOSE_BTN_H, 5, TFT_RADIO_THEME);
   tft.drawRoundRect(APRS_ALERT_CLOSE_BTN_X, APRS_ALERT_CLOSE_BTN_Y, APRS_ALERT_CLOSE_BTN_W, APRS_ALERT_CLOSE_BTN_H, 5, TFT_BLACK);
   tft.drawLine(APRS_ALERT_CLOSE_BTN_X + 7, APRS_ALERT_CLOSE_BTN_Y + 7,
                APRS_ALERT_CLOSE_BTN_X + APRS_ALERT_CLOSE_BTN_W - 8, APRS_ALERT_CLOSE_BTN_Y + APRS_ALERT_CLOSE_BTN_H - 8, TFT_BLACK);
@@ -8711,7 +8729,7 @@ void ALERT_Screen(const APRSStation &station) {
   aprsAlertFramePulseOn = true;
 
   tft.fillScreen(TFT_BLACK);
-  tft.fillRect(0, 0, 320, 40, TFT_RADIO_ORANGE);
+  tft.fillRect(0, 0, 320, 40, TFT_RADIO_THEME);
   tft.drawFastHLine(0, 39, 320, 0x8410);
 
   tft.setTextColor(TFT_BLACK);
@@ -8771,7 +8789,7 @@ void ALERT_Screen(const APRSStation &station) {
   }
   drawAprsAlertCompass(compassX, compassY, compassR, hasBearing, bearingDeg);
 
-  tft.setTextColor(TFT_RADIO_ORANGE);
+  tft.setTextColor(TFT_RADIO_THEME);
   tft.setTextSize(2);
   int distX = compassX - ((int)distanceText.length() * 12) / 2;
   distX += 22;
@@ -9001,13 +9019,13 @@ void locatorToLatLon(String locator, double &lat, double &lon) {
     return;
   }
   
-  // Pierwsze 2 znaki - kwadrat (field)
+  // First 2 characters – square (field)
   char c1 = toupper(locator.charAt(0));
   char c2 = toupper(locator.charAt(1));
   lon = (c1 - 'A') * 20 - 180;
   lat = (c2 - 'A') * 10 - 90;
   
-  // NastÄ™pne 2 znaki - kwadrat (square)
+  // Next 2 characters - square
   if (locator.length() >= 4) {
     int n1 = locator.charAt(2) - '0';
     int n2 = locator.charAt(3) - '0';
@@ -9015,7 +9033,7 @@ void locatorToLatLon(String locator, double &lat, double &lon) {
     lat += n2 * 1;
   }
   
-  // Ĺšrodek kwadratu
+ // Center of the square
   lon += 1;
   lat += 0.5;
 }
@@ -9031,7 +9049,7 @@ void updateUserLatLonFromLocator() {
   }
 }
 
-// SprawdĹş czy tekst wspĂłĹ‚rzÄ™dnych ma tylko cyfry i kropkÄ™ (nie obsĹ‚ugujemy formatĂłw skompresowanych)
+// Check if the coordinate string contains only digits and a dot (we do not support compressed formats)
 static bool isAprsNumeric(const String &raw_aprs) {
     if (raw_aprs.length() == 0) {
         return false;
@@ -9051,16 +9069,16 @@ static bool isAprsNumeric(const String &raw_aprs) {
     return true;
 }
 
-// Konwersja surowej pozycji APRS na stopnie dziesiÄ™tne
-// Konwersja formatu APRS (DDMM.mmN lub DDDMM.mmE) na stopnie dziesiÄ™tne
-// Format APRS: DDMM.mm dla szerokoĹ›ci, DDDMM.mm dla dĹ‚ugoĹ›ci
+// Convert raw APRS position to decimal degrees
+// Convert APRS format (DDMM.mmN or DDDMM.mmE) to decimal degrees
+// APRS format: DDMM.mm for latitude, DDDMM.mm for longitude
 float convertToDecimal(String raw_aprs, char direction) {
     if (raw_aprs.length() < 4) {
-        LOGV_PRINTF("[APRS] convertToDecimal: za krĂłtki string: %s\n", raw_aprs.c_str());
+        LOGV_PRINTF("[APRS] convert ToDecimal: string too short: %s\n", raw_aprs.c_str());
         return NAN;
     }
     if (!isAprsNumeric(raw_aprs)) {
-        LOGV_PRINTF("[APRS] convertToDecimal: nie-numeryczny format: %s\n", raw_aprs.c_str());
+        LOGV_PRINTF("[APRS] ToDecimal conversion: non-numeric format: %s\n", raw_aprs.c_str());
         return NAN;
     }
 
@@ -9068,8 +9086,8 @@ float convertToDecimal(String raw_aprs, char direction) {
     double minutes = 0.0;
 
     if (direction == 'N' || direction == 'S') {
-        // SzerokoĹ›Ä‡ (Latitude): pierwsze 2 znaki to stopnie (DDMM.mm)
-        // PrzykĹ‚ad: "5202.40" -> degrees=52, minutes=02.40
+        // Latitude: the first 2 characters are degrees (DDMM.mm)
+        // Example: "5202.40" -> degrees=52, minutes=02.40
         if (raw_aprs.length() >= 2) {
             String degStr = raw_aprs.substring(0, 2);
             degrees = degStr.toDouble();
@@ -9079,8 +9097,8 @@ float convertToDecimal(String raw_aprs, char direction) {
             minutes = minStr.toDouble();
         }
     } else if (direction == 'E' || direction == 'W') {
-        // DĹ‚ugoĹ›Ä‡ (Longitude): pierwsze 3 znaki to stopnie (DDDMM.mm)
-        // PrzykĹ‚ad: "01655.12" -> degrees=016, minutes=55.12
+        // Longitude: the first 3 characters represent degrees (DDDMM.mm)
+        // Example: "01655.12" -> degrees=016, minutes=55.12
         if (raw_aprs.length() >= 3) {
             String degStr = raw_aprs.substring(0, 3);
             degrees = degStr.toDouble();
@@ -10776,9 +10794,9 @@ bool fetchHamalertTelnet() {
   return hamalertSpotCount > 0;
 }
 
-// ========== APRS-IS FUNKCJE ==========
+// ========== APRS-IS FUNCTIONS ==========
 
-// PoĹ‚Ä…cz z serwerem APRS-IS
+// Connect to the APRS-IS server
 void connectToAPRS() {
   Serial.println("[APRS] connectToAPRS() START");
   
@@ -10789,7 +10807,7 @@ void connectToAPRS() {
   
   if (aprsClient.connected()) {
     // If the configuration has changed, disconnect and reconnect.
-    Serial.println("[APRS] JuĹĽ poĹ‚Ä…czony - sprawdzam czy potrzeba reconnect...");
+    Serial.println("[APRS] Already connected – checking if a reconnect is needed...");
     // We could add a check to see if the configuration has changed, but for now, let's leave it as is.
     // If necessary, reconnection will occur automatically via the watchdog.
     return;
@@ -10835,8 +10853,8 @@ void connectToAPRS() {
     aprsLoginSent = false;
     lastAPRSRxMs = millis();
     
-    // Zaplanuj wysĹ‚anie loginu
-    delay(500); // KrĂłtkie opĂłĹşnienie przed loginem
+    // Schedule login transmission
+    delay(500); // Short delay before login
     sendAPRSLogin();
   } else {
     unsigned long connectTime = millis() - connectStart;
@@ -10881,10 +10899,10 @@ void sendAPRSFilter() {
     return;
   }
   
-  // Format filtra: #filter r/52.40/16.92/50
-  // UĹĽywamy wspĂłĹ‚rzÄ™dnych z sekcji "Moja Stacja"
-  double filterLat = userLatLonValid ? userLat : 52.40;  // Fallback if not set
-  double filterLon = userLatLonValid ? userLon : 16.92;
+  // Filter format: #filter r/52.40/16.92/50 
+  // We use the coordinates from the "My Station" section.
+  double filterLat = userLatLonValid ? userLat : 77.54;  // Fallback if not set
+  double filterLon = userLatLonValid ? userLon : 12.93;
   String filter = "#filter r/";
   filter += String(filterLat, 2);
   filter += "/";
@@ -11287,7 +11305,7 @@ void sendAprsPosition() {
 bool parseAPRSFrame(String line, APRSStation &station) {
   LOGV_PRINTF("[APRS] Parsing frame: %s\n", line.c_str());
   
-  // WyczyĹ›Ä‡ strukturÄ™
+ // Clear the structure
   station.time = "";
   station.callsign = "";
   station.symbol = "";
@@ -11299,7 +11317,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   station.distance = 0.0f;
   station.hasLatLon = false;
   
-  // Pobierz czas UTC
+  // Get UTC time
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[6];
@@ -11309,30 +11327,30 @@ bool parseAPRSFrame(String line, APRSStation &station) {
     station.time = "----Z";
   }
   
-  // Parsuj callsign (przed >)
+  // Parse callsign (before >)
   int gtPos = line.indexOf('>');
   if (gtPos < 0) {
-    LOGV_PRINTLN("[APRS] Brak znaku '>' w ramce - nieprawidĹ‚owy format");
+    LOGV_PRINTLN("[APRS] Missing '>' character in frame – invalid format");
     return false;
   }
   station.callsign = line.substring(0, gtPos);
   station.callsign.trim();
   LOGV_PRINTF("[APRS] Callsign: %s\n", station.callsign.c_str());
 
-  // Najpierw sprĂłbuj dekodowaÄ‡ Mic-E / skompresowane / obiekty z gotowego parsera
+  // First, try decoding Mic-E / compressed / objects using a pre-built parser.
   bool advancedParsed = parseAprsAdvancedPosition(line, station);
   if (advancedParsed) {
     LOGV_PRINTF("[APRS] Advanced decode lat/lon: %.6f, %.6f\n", station.lat, station.lon);
   }
   
-  // Parsuj pozycjÄ™ GPS (prosty parser) tylko jeĹ›li advanced nie zadziaĹ‚aĹ‚
-  // Szukaj formatu: !5202.40N/01655.12E, @5202.40N/01655.12E, =5202.40N/01655.12E, lub ;...*HHMMzDDMM.mmN/DDDMM.mmE
+  // Parse GPS position (simple parser) only if the advanced parser failed
+  // Look for the format: !5202.40N/01655.12E, @5202.40N/01655.12E, =5202.40N/01655.12E, or ;...*HHMMzDDMM.mmN/DDDMM.mmE
   int posStart = -1;
   char tableSymbol = 0;
-  int commentBeforePos = -1; // Pozycja poczÄ…tku komentarza przed timestampem (dla formatu z ;)
+  int commentBeforePos = -1; // Position of the start of the comment before the timestamp (for the format with ;)
   
   if (!advancedParsed) {
-  // Szukaj standardowych formatĂłw pozycji (!, @, =)
+  // Search for standard item formats (!, @, =)
   posStart = line.indexOf('!');
   if (posStart >= 0) {
     tableSymbol = '!';
@@ -11348,23 +11366,23 @@ bool parseAPRSFrame(String line, APRSStation &station) {
     }
   }
   
-  // JeĹ›li nie znaleziono standardowych formatĂłw, szukaj w komentarzu (format z ;)
+  // If standard formats were not found, search within the comment (format with ;)
   if (posStart < 0) {
     int colonPos = line.indexOf(':');
     if (colonPos >= 0) {
       String commentPart = line.substring(colonPos + 1);
-      // Szukaj formatu z ; i timestampem: ;...*HHMMzDDMM.mmN/DDDMM.mmE
+      // Search for the format containing a semicolon and timestamp: ;...*HHMMzDDMM.mmN/DDDMM.mmE
       int semicolonPos = commentPart.indexOf(';');
       if (semicolonPos >= 0) {
-        // Zapisz pozycjÄ™ poczÄ…tku komentarza przed timestampem
+        // Save the position of the start of the comment before the timestamp.
         commentBeforePos = colonPos + 1 + semicolonPos + 1; // +1 bo colonPos, +1 bo po ';'
-        // Szukaj timestampu *HHMMz
+        // Search for timestamp *HHMMz
         int timestampPos = commentPart.indexOf('*', semicolonPos);
         if (timestampPos >= 0 && timestampPos + 7 < commentPart.length()) {
-          // SprawdĹş czy po timestampie jest pozycja (format: *HHMMzDDMM.mmN)
+          // Check if there is a position following the timestamp (format: *HHMMzDDMM.mmN)
           char zChar = commentPart.charAt(timestampPos + 6);
           if (zChar == 'z' || zChar == 'Z') {
-            // Pozycja zaczyna siÄ™ po 'z'
+            // The position starts after 'z'
             posStart = colonPos + 1 + timestampPos + 7; // +1 bo colonPos, +timestampPos, +7 bo "*HHMMz"
             tableSymbol = ';';
           }
@@ -11374,21 +11392,21 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   }
   
   if (posStart < 0) {
-    // Brak pozycji - sprĂłbuj wyciÄ…gnÄ…Ä‡ tylko callsign i komentarz
-    LOGV_PRINTLN("[APRS] Brak pozycji GPS w ramce");
+    // No entries found – try extracting only the callsign and comment.
+    LOGV_PRINTLN("[APRS] No GPS position in frame");
     int colonPos = line.indexOf(':');
     if (colonPos >= 0) {
       station.comment = line.substring(colonPos + 1);
       station.comment.trim();
     }
-    return true; // ZwrĂłÄ‡ true nawet bez pozycji
+    return true; // Return true even without a position
   }
   
-  LOGV_PRINTF("[APRS] Znaleziono pozycjÄ™ na indeksie %d, symbol tabeli: %c\n", posStart, tableSymbol);
+  LOGV_PRINTF("[APRS] Position found at index %d, symbol table: %c\n", posStart, tableSymbol);
   
-  // Symbol table ustawimy po wyciÄ…gniÄ™ciu pozycji
-  
-  // Wyznacz poczÄ…tek pozycji (lat) zaleĹĽnie od formatu
+// We will set the symbol table after extracting the position
+
+// Determine the start of the position (latitude), depending on the format
   bool posStartIsSymbol = (tableSymbol == '!' || tableSymbol == '@' || tableSymbol == '=' || tableSymbol == '/');
   int latStart = posStartIsSymbol ? (posStart + 1) : posStart; // dla ';' posStart wskazuje juĹĽ na lat
 
@@ -11436,7 +11454,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
       }
     }
     
-    // Parsuj dĹ‚ugoĹ›Ä‡ geograficznÄ…: 01655.12E (format: DDDMM.mmE)
+    // Parse longitude: 01655.12E (format: DDDMM.mmE)
     if (slashPos >= 0 && slashPos + 9 < line.length()) {
       String lonStr = line.substring(slashPos + 1, slashPos + 9);
       if (lonStr.length() == 8) {
@@ -11631,7 +11649,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   return true;
 }
 
-// Dodaj nowÄ… stacjÄ™ APRS do tablicy (bez duplikatĂłw - aktualizuje istniejÄ…ce)
+// Add a new APRS station to the array (no duplicates – updates existing ones)
 void addAPRSStation(APRSStation station) {
   compactAprsStationStrings(station);
   LOGV_PRINT("[APRS] addAPRSStation: ");
@@ -11647,7 +11665,7 @@ void addAPRSStation(APRSStation station) {
   }
   LOGV_PRINTLN();
   
-  // SprawdĹş czy stacja juĹĽ istnieje (po callsign)
+ // Check if the station already exists (by callsign)
   int existingIndex = -1;
   for (int i = 0; i < aprsStationCount; i++) {
     if (aprsStations[i].callsign.equalsIgnoreCase(station.callsign)) {
@@ -11657,20 +11675,20 @@ void addAPRSStation(APRSStation station) {
   }
   
   if (existingIndex >= 0) {
-    // Stacja juĹĽ istnieje - usuĹ„ jÄ… z obecnej pozycji
+    // The station already exists – remove it from its current position.
     for (int i = existingIndex; i > 0; i--) {
       aprsStations[i] = aprsStations[i - 1];
     }
-    // Zaktualizuj dane stacji (nowy czas, pozycja, itp.)
+    // Update station data (new time, position, etc.)
     aprsStations[0] = station;
-    LOGV_PRINT("[APRS] Stacja juĹĽ istnieje - zaktualizowano na pozycji 0");
+    LOGV_PRINT("[APRS] Station already exists – updated at position 0");
   } else {
-    // Nowa stacja - dodaj na poczÄ…tku
+   // New station - add at the beginning
     if (aprsStationCount < MAX_APRS_STATIONS) {
       aprsStationCount++;
     }
     
-    // PrzesuĹ„ wszystkie stacje o jeden w dĂłĹ‚
+    // Shift all stations down by one
     for (int i = MAX_APRS_STATIONS - 1; i > 0; i--) {
       aprsStations[i] = aprsStations[i - 1];
     }
@@ -11695,7 +11713,7 @@ void handleAPRSData() {
     return;
   }
   
-  // Odczytaj dostÄ™pne dane
+  // Read available data
   while (aprsClient.available()) {
     unsigned char c = (unsigned char)aprsClient.read();
     lastAPRSRxMs = millis();
@@ -11712,7 +11730,7 @@ void handleAPRSData() {
           continue;
         }
         
-        // Parsuj ramkÄ™ APRS
+       // Parse APRS frame
         APRSStation station;
         if (parseAPRSFrame(line, station)) {
           addAPRSStation(station);
@@ -11866,7 +11884,7 @@ bool connectToWiFi() {
       Serial.print("IP: ");
       Serial.println(WiFi.localIP());
 
-      // Aktualizuj wyĹ›wietlacz TFT z IP STA (jeĹ›li jesteĹ›my na ekranie 1)
+      // Update the TFT display with the STA IP (if we are on Screen 1)
 #ifdef ENABLE_TFT_DISPLAY
       updateScreen1();
 #endif
@@ -12632,9 +12650,9 @@ void setupWebServer() {
     }
   });
   
-  // API - pobierz wszystkie spoty (maksymalnie 50)
-  server->on("/api/spots", HTTP_GET, []() {
-    // ZwiÄ™kszony bufor JSON dla 50 spotĂłw (kaĹĽdy spot ~150-200 bajtĂłw)
+    // API - Get all spots (max 50)
+    server->on("/api/spots", HTTP_GET, []() {
+    // Increased JSON buffer for 50 spots (each spot ~150–200 bytes)
     StaticJsonDocument<12000> doc;  // 50 spotĂłw * ~200 bajtĂłw = ~10KB + margines
     JsonArray spotsArray = doc.createNestedArray("spots");
     
@@ -12657,13 +12675,13 @@ void setupWebServer() {
     server->send(200, "application/json", json);
   });
   
-  // API - pobierz stacje APRS
+  // API - Get APRS stations
   server->on("/api/aprs", HTTP_GET, []() {
-    // Bufor JSON dla 20 stacji APRS (kaĹĽda stacja ~200-250 bajtĂłw)
-    StaticJsonDocument<6000> doc;  // 20 stacji * ~250 bajtĂłw = ~5KB + margines
+   // JSON buffer for 20 APRS stations (each station ~200-250 bytes)
+    StaticJsonDocument<6000> doc;  // 20 stations * ~250 bytes = ~5KB + margin
     JsonArray aprsArray = doc.createNestedArray("stations");
     
-    // ZwrĂłÄ‡ wszystkie stacje APRS (maksymalnie 20)
+    // Return all APRS stations (maximum 20)
     for (int i = 0; i < aprsStationCount; i++) {
       JsonObject stationObj = aprsArray.createNestedObject();
       stationObj["time"] = aprsStations[i].time;
@@ -12682,9 +12700,9 @@ void setupWebServer() {
     server->send(200, "application/json", json);
   });
 
-  // API - POTA (bufor z backendu, z krajami z QRZ jeśli dostępne)
+  // API - POTA (backend cache, including countries from QRZ if available)
   server->on("/api/pota", HTTP_GET, []() {
-    StaticJsonDocument<12000> doc; // do 30 spotów * ~300-350 bajtów
+    StaticJsonDocument<12000> doc; // up to 30 spots * ~300–350 bytes
     JsonArray spotsArray = doc.createNestedArray("spots");
     const int apiSpotLimit = 30;
     const int potaApiCount = (potaSpotCount < apiSpotLimit) ? potaSpotCount : apiSpotLimit;
@@ -13800,60 +13818,59 @@ void loop() {
   handleDisplaySleep();
   yield() ;
   
-  // ObsĹ‚uga serwera WWW
+  // Web Server Handling
   if (server != nullptr) {
     server->handleClient();
   }
   
-  // Aktualizuj czas NTP
+  // Update NTP time
   updateNTPTime();
   
-  // ObsĹ‚uga WiFi
+  // WiFi Support
   if (!wifiConnected && WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
     Serial.print("STA połączone…czone. IP: ");
     Serial.println(WiFi.localIP());
-    // Jeżeli wcześniej był uruchomiony AP do konfiguracji, wyłącz go po udanym połączeniu STA,
-    // żeby nie robić wrażenia "zwiechy" (klient AP traci link przy przełączeniu kanału).
+    // If the AP was previously enabled for configuration, disable it after the STA has successfully connected,
+    // to avoid giving the impression of a "freeze" (the AP client loses the link during a channel switch).
     if (WiFi.getMode() & WIFI_AP) {
       Serial.println("Turning off the AP (portal) after the STA connects. Use the IP from the home network.");
       WiFi.softAPdisconnect(true);
       WiFi.mode(WIFI_STA);
     }
     
-
     updateNTPTime();
     connectToCluster();
     connectToPotaCluster();
     connectToAPRS();    
 
   } else if (wifiConnected && WiFi.status() != WL_CONNECTED) {
-    LOGV_PRINTLN("[LOOP] WiFi status zmieniony: połączony -> rozłączony");
+    LOGV_PRINTLN("[LOOP] WiFi status changed: connected -> disconnected");
     wifiConnected = false;
     telnetConnected = false;
     potaTelnetConnected = false;
     aprsConnected = false;
-    LOGV_PRINTLN("[LOOP] STA rozłączone (wracam do trybu offline/AP jeśli aktywne).");
+    LOGV_PRINTLN("[LOOP] STA disconnected (returning to offline/AP mode if active).");
   }
 
   updateStatusRgbLed();
 
-  // W trybie AP okresowo podejmuj bezpieczną próbę powrotu do STA.
+  // In AP mode, periodically attempt a safe return to STA mode.
   retryWiFiFromAPIfDue(now);
 
-  // Jeśli jesteśmy offline, zostajemy w AP (portal) — stabilnie.
+  // If we are offline, we stay in AP mode (portal) — stable.
   
-  // Obsługa Telnet
+  // Telnet Support
   if (wifiConnected) {
     if (!telnetConnected) {
-      LOGV_PRINTLN("[LOOP] WiFi OK, próba połączenia z Cluster...");
+      LOGV_PRINTLN("[LOOP] WiFi OK, attempting to connect to Cluster...");
       connectToCluster();
     } else {
       handleTelnetData();
     }
   }
 
-  // Obsługa POTA Telnet
+  // POTA Telnet Support
   if (wifiConnected) {
     // HTTP API Mode Instead of Telnet (źródło: https://api.pota.app/v1/spots)
     if (lastPotaApiFetchMs == 0 || now - lastPotaApiFetchMs > POTA_API_FETCH_INTERVAL_MS) {
@@ -13865,7 +13882,7 @@ void loop() {
       }
     }
 
-    // HAMALERT przez Telnet: set/json + sh/dx 30
+    // HAMALERT via Telnet: set/json + sh/dx 30
     if (lastHamalertFetchMs == 0 || now - lastHamalertFetchMs > HAMALERT_FETCH_INTERVAL_MS) {
       fetchHamalertTelnet();
       lastHamalertFetchMs = now;
@@ -13947,7 +13964,7 @@ void loop() {
             qrzQueue[i].nextTryMs = now + QRZ_RETRY_DELAY_MS;
           }
         }
-        break; // jedna prĂłba na iteracjÄ™
+        break; // one attempt per iteration
       }
     }
   }
@@ -14003,7 +14020,7 @@ void loop() {
       applyQrzCacheToSpot(spot, QRZ_CACHE_TTL_MS);
       addPotaSpot(spot);
       bool qrzConfigured = (qrzUsername.length() > 0 && qrzPassword.length() > 0);
-      // Dodaj lookup QRZ tylko jeśli country jest puste (nie dubluj dla DX Cluster)
+      // Add QRZ lookup only if the country is empty (do not duplicate for DX Cluster)
       if (qrzConfigured && spot.country.length() == 0 && spot.callsign.length() > 0) {
         String call = spot.callsign;
         call.toUpperCase();
@@ -14013,7 +14030,7 @@ void loop() {
     }
   }
 
-  // Watchdog telnet: jeĹ›li brak danych z clustra przez dĹ‚uĹĽszy czas, zrĂłb reconnect
+  // Telnet Watchdog: If no data is received from the cluster for an extended period, reconnect.
   if (telnetConnected && telnetClient.connected()) {
     unsigned long now = millis();
     unsigned long inactivityTime = now - lastTelnetRxMs;
@@ -14047,10 +14064,10 @@ void loop() {
     }
   }
 
-  // WyĹ›lij znak (login) jeĹ›li zaplanowany
+  // Send character (login) if scheduled
   if (telnetConnected && telnetClient.connected() && clusterLoginScheduled) {
     if ((long)(millis() - clusterSendLoginAtMs) >= 0) {
-      LOGV_PRINTLN("[LOOP] WysyĹ‚anie loginu do Cluster...");
+      LOGV_PRINTLN("[LOOP] Sending login to Cluster...");
       clusterLoginScheduled = false;
       if (!clusterLoginSent) {
         String login = userCallsign;
@@ -14059,8 +14076,8 @@ void loop() {
           login = DEFAULT_CALLSIGN;
         }
         
-        // JeĹ›li mamy lokator, dodaj go do loginu w formacie: callsign/locator
-        // Format zgodny z CC-Cluster (dxspots.com) i wiÄ™kszoĹ›ciÄ… DX ClusterĂłw
+        // If a locator is available, append it to the callsign in the format: callsign/locator
+        // Format compatible with CC-Cluster (dxspots.com) and most DX Clusters
         if (userLocator.length() >= 4) {
           login += "/";
           login += userLocator;
@@ -14068,16 +14085,16 @@ void loop() {
           Serial.print(login);
           Serial.print(" (callsign/locator)");
           if (userCallsign.length() == 0) {
-            Serial.print(" - domyĹ›lny znak, ustaw swĂłj w Config");
+            Serial.print("– Default character; set your own in Config.");
           }
           Serial.println();
         } else {
           Serial.print("[CLUSTER] Login -> ");
           Serial.print(login);
           if (userCallsign.length() == 0) {
-            Serial.print(" (domyĹ›lny, ustaw swĂłj znak w Config)");
+            Serial.print("(Default; set your symbol in Config)");
           } else {
-            Serial.print(" (bez lokatora - ustaw w Config dla lepszej funkcjonalnoĹ›ci)");
+            Serial.print("(No tenant – set in Config for better functionality)");
           }
           Serial.println();
         }
