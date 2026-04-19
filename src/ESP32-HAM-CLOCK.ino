@@ -3,7 +3,7 @@
  * Original author SP3KON
  * Modifications by VU3GWN
  * 
-# New features in v1.7.0
+# New features in v1.8.0
 1. Removed seconds in Local/UTC time
 2. More clean up
  
@@ -1152,7 +1152,7 @@ void drawWelcomeScreenYellow() {
   String lines[] = {
     " ",
     "BARC-HAM-CLOCK",
-    "version 1.6.0",
+    "version v1.8.0",
     " "
   };
   for (int i = 0; i < 4; i++) {
@@ -1859,12 +1859,11 @@ void drawHamClock() {
   tft.setTextSize(1);
   tft.setTextColor(TFT_RADIO_THEME);
   tft.setCursor(110, 105);
-  tft.print("OPERATOR STATION");
+  //tft.print("OPERATOR STATION");
 
   // 4. UTC Clock – Same size as Callsign (TextSize 4)
   // Restricted to the main frame area (x=10, width=300)
-  tft.setTextColor(TFT_WHITE);
-  tft.setTextSize(4);
+
   String timeUTC = (screen1TimeMode == SCREEN1_TIME_LOCAL)
                      ? getTimezoneTimeString("%H:%M:%S", 9)
                      : getUtcTimeString();
@@ -1874,7 +1873,9 @@ void drawHamClock() {
   int timeX = frameX + (frameWidth - timeWidth) / 2;// Centering within the frame
   // Constrained to frame area (minimum frameX + margin)
   timeX = (timeX < frameX + 5) ? frameX + 5 : timeX;
-  tft.setCursor(timeX, 125);
+  tft.setTextColor(TFT_WHITE);
+  tft.setTextSize(4);
+  tft.setCursor(timeX, 115);
   tft.print(timeUTC);
 
   tft.setTextSize(1);
@@ -2134,15 +2135,15 @@ void updateScreen1Clock() {
                      : getUtcTimeString();
   
   // Use the same coordinates as in draw HamClock() — confine to the frame area.
-  int frameX = 10;        // PoczÄ…tek ramki gĹ‚Ăłwnej
-  int frameWidth = 300;   // SzerokoĹ›Ä‡ ramki gĹ‚Ăłwnej
-  int timeWidth = timeUTC.length() * 24; // SzerokoĹ›Ä‡ tekstu zegara
-  int timeX = frameX + (frameWidth - timeWidth) / 2; // WyĹ›rodkowanie w ramce
+  int frameX = 10; // Start of the main frame
+  int frameWidth = 300; // Width of the main frame
+  int timeWidth = timeUTC.length() * 24; // Width of the clock text
+  int timeX = frameX + (frameWidth - timeWidth) / 2; // Centering within the frame
   timeX = (timeX < frameX + 5) ? frameX + 5 : timeX;
   
   // Clear only the clock text area (with a small margin), not the entire rectangle.
   // TextSize 4 has a height of approximately 32px, so clear a little more.
-  const int timeBoxY = 120;
+  const int timeBoxY = 115;
   const int timeBoxH = 35; // Text height + margin
   const int timeBoxW = timeWidth + 10; // Text width + side margins
   const int timeBoxX = timeX - 5; // Left margin
@@ -2159,7 +2160,7 @@ void updateScreen1Clock() {
   // Display clock
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(4);
-  tft.setCursor(timeX, 125);
+  tft.setCursor(timeX, 115);
   tft.print(timeUTC);
 }
 
@@ -10878,7 +10879,7 @@ void sendAPRSLogin() {
   login += getAprsTxCallsignWithSsid();
   login += " pass ";
   login += String(aprsPasscode);
-  login += " vers BARC-HAM-CLOCK 1.6.0";
+  login += " vers BARC-HAM-CLOCK v1.8.0";
   
   Serial.print("[APRS] Sending login: ");
   Serial.println(login);
