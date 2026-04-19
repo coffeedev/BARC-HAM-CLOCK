@@ -63,7 +63,7 @@ extern bool unlisGameOver;
 enum ScreenType : uint8_t {
   SCREEN_OFF = 0,
   SCREEN_HAM_CLOCK = 1,
-  SCREEN_HAM_CLOCK2 = 2,
+  SCREEN_HAM_TWOCLOCKS = 2,
   SCREEN_DX_CLUSTER = 3,
   SCREEN_SUN_SPOTS = 4,
   SCREEN_BAND_INFO = 5,
@@ -167,7 +167,7 @@ bool littleFsReady = false;
 const int SCREEN_PAGE_COUNT = 12;
 const ScreenType DEFAULT_SCREEN_ORDER[SCREEN_PAGE_COUNT] = {
   SCREEN_HAM_CLOCK,
-  SCREEN_HAM_CLOCK2,
+  SCREEN_HAM_TWOCLOCKS,
   SCREEN_DX_CLUSTER,
   SCREEN_APRS_IS,
   SCREEN_APRS_RADAR,
@@ -182,7 +182,7 @@ const ScreenType DEFAULT_SCREEN_ORDER[SCREEN_PAGE_COUNT] = {
 
 ScreenType screenOrder[SCREEN_PAGE_COUNT] = {
   SCREEN_HAM_CLOCK,
-  SCREEN_HAM_CLOCK2,
+  SCREEN_HAM_TWOCLOCKS,
   SCREEN_DX_CLUSTER,
   SCREEN_APRS_IS,
   SCREEN_APRS_RADAR,
@@ -212,6 +212,7 @@ unsigned long lastScreen5UpdateMs = 0;
 unsigned long lastScreen7UpdateMs = 0;
 unsigned long lastScreen8UpdateMs = 0;
 bool screen1HeaderNeedsRedraw = true;
+bool screenHeaderForTwoClocksNeedsRedraw = true ;
 
 const int TFT_TABLE_TOP = 32;
 const int TFT_TABLE_BOTTOM = 220;
@@ -1346,8 +1347,8 @@ void drawScreen(ScreenType screenNum) {
     case SCREEN_HAM_CLOCK:
       drawHamClock();
       break;
-    case SCREEN_HAM_CLOCK2:
-      drawHamClock2();
+    case SCREEN_HAM_TWOCLOCKS:
+      drawTwoClocks();
       break;
     case SCREEN_DX_CLUSTER:
       drawDxCluster();
@@ -1928,12 +1929,12 @@ void drawHamClock() {
   //End of drawHamClock
 }
 
-void updateScreen1Header2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK2 || inMenu) {
+void updateScreenHeadForTwoClocks() {
+  if (!tftInitialized || currentScreen != SCREEN_HAM_TWOCLOCKS || inMenu) {
     return;
   }
 
- if (!screen1HeaderNeedsRedraw) {
+ if (!screenHeaderForTwoClocksNeedsRedraw) {
     return;
   }
 
@@ -1969,18 +1970,18 @@ void updateScreen1Header2() {
   //tft.setCursor(clockX + 1, textY); // A slight 1px lateral shift creates a "Bold" effect.
   //tft.print("CLOCK");
 
-  screen1HeaderNeedsRedraw = false;
+  screenHeaderForTwoClocksNeedsRedraw = false;
 
-  //updateScreen1Header2
+  //updateScreenHeadForTwoClocks
 }
 
-void drawHamClock2() {
+void drawTwoClocks() {
   // Dark Background – Professional Appearance and Reduced Eye Strain
   tft.fillScreen(TFT_BLACK);
-  screen1HeaderNeedsRedraw = true;
+  screenHeaderForTwoClocksNeedsRedraw = true;
   
   // 1. HEADER – Orange Bar
-  updateScreen1Header2();
+  updateScreenHeadForTwoClocks();
 
   // 2. Main Frame
   tft.drawRoundRect(10, 50, 300, 155, 8, TFT_DARKGREY);
@@ -2022,38 +2023,40 @@ void drawHamClock2() {
   tft.fillTriangle(310, 230, 300, 222, 300, 238, TFT_RADIO_ORANGE);
   
  	
- //End of drawHamClock2
+ //End of drawTwoClocks
 }
 
-void updateScreen1Clock2() {
-  if (!tftInitialized || currentScreen != SCREEN_HAM_CLOCK2 || inMenu) {
+void updateScreenTwoClocks() {
+  if (!tftInitialized || currentScreen != SCREEN_HAM_TWOCLOCKS || inMenu) {
     return;
   }
 
   static unsigned long lastClockRedrawMs = 0;
   unsigned long now = millis();
-  if (lastClockRedrawMs != 0 && (now - lastClockRedrawMs) < 1000L) {
+  if (lastClockRedrawMs != 0 && (now - lastClockRedrawMs) < 10000L) {
     return;
   }
 
   //return ;
   setenv("TZ", "UTC0", 1);
   tzset();
-  String timeUTC = getUtcTimeString();
 
   struct tm timeinfo;
+  String timeUTC = "--:--" ;
+
+  if (getLocalTime(&timeinfo, 1)) {
+    char timeBuffer[9];
+    strftime(timeBuffer, 9, "%H:%M", &timeinfo);
+    timeUTC = String(timeBuffer);
+  }
+  
   const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
   configTime(timezoneOffsetSec, 0, "pool.ntp.org");
   char current[9];
-  String timeLocal = "" ;
-  if (!getLocalTime(&timeinfo)) 
+  String timeLocal = String("--:--") ;
+  if (getLocalTime(&timeinfo)) 
   {
-    Serial.println("getTimeWithTimeZone failed. returning") ;
-    timeLocal = String("--:--:--") ;
-  }
-  else
-  {
-    strftime(current, 9, "%H:%M:%S", &timeinfo);
+    strftime(current, 9, "%H:%M", &timeinfo);
     timeLocal = String(current) ;
   }
   
@@ -2114,7 +2117,7 @@ void updateScreen1Clock2() {
 
   lastClockRedrawMs = now;
 
-  //updateScreen1Clock2
+  //updateScreenTwoClocks
 }
 
 void updateScreen1Clock() {
@@ -2133,14 +2136,14 @@ void updateScreen1Clock() {
   int timeX = frameX + (frameWidth - timeWidth) / 2; // WyĹ›rodkowanie w ramce
   timeX = (timeX < frameX + 5) ? frameX + 5 : timeX;
   
-  // WyczyĹ›Ä‡ tylko obszar tekstu zegara (z maĹ‚ym marginesem), nie caĹ‚y prostokÄ…t
-  // TextSize 4 ma wysokoĹ›Ä‡ okoĹ‚o 32px, wiÄ™c wyczyĹ›Ä‡ trochÄ™ wiÄ™cej
+  // Clear only the clock text area (with a small margin), not the entire rectangle.
+  // TextSize 4 has a height of approximately 32px, so clear a little more.
   const int timeBoxY = 120;
-  const int timeBoxH = 35; // WysokoĹ›Ä‡ tekstu + margines
-  const int timeBoxW = timeWidth + 10; // SzerokoĹ›Ä‡ tekstu + margines po bokach
-  const int timeBoxX = timeX - 5; // Margines z lewej
+  const int timeBoxH = 35; // Text height + margin
+  const int timeBoxW = timeWidth + 10; // Text width + side margins
+  const int timeBoxX = timeX - 5; // Left margin
   
-  // Ograniczenie do obszaru ramki (nie wychodĹş poza ramkÄ™)
+  // Constrain to frame area (do not extend beyond the frame)
   int cleanX = (timeBoxX < frameX + 5) ? frameX + 5 : timeBoxX;
   int cleanW = timeBoxW;
   if (cleanX + cleanW > frameX + frameWidth - 5) {
@@ -2149,7 +2152,7 @@ void updateScreen1Clock() {
   
   tft.fillRect(cleanX, timeBoxY, cleanW, timeBoxH, TFT_BLACK);
 
-  // WyĹ›wietl zegar
+  // Display clock
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(4);
   tft.setCursor(timeX, 125);
@@ -2395,10 +2398,10 @@ void updateScreen2Data() {
     return;
   }
 
-  // 1) Zaktualizuj czas w nagĹ‚Ăłwku (bez peĹ‚nego odĹ›wieĹĽania)
+  // 1) Update the time in the header (without a full refresh)
   updateScreen2Clock();
 
-  // 2) OdĹ›wieĹĽ tabelÄ™ tylko gdy dane siÄ™ zmieniĹ‚y
+  // 2) Refresh the table only when the data has changed
   static uint32_t lastSig = 0;
   static unsigned long lastTableRedrawMs = 0;
   uint32_t currentSig = computeScreen2Signature();
@@ -2414,7 +2417,7 @@ void updateScreen2Data() {
   lastSig = currentSig;
   lastTableRedrawMs = now;
 
-  // 3) Renderuj tabelÄ™ do bufora i wypchnij jednym ruchem (bez migotania)
+  // 3) Render the table to a buffer and push it out in a single pass (without flickering)
   const bool navVisible = isTableNavFooterVisible(SCREEN_DX_CLUSTER);
   const bool enlarged = isDxTableEnlarged();
   const int maxRows = getDxTableMaxRows();
@@ -3438,7 +3441,7 @@ const int SCREEN_ORDER_COUNT = SCREEN_PAGE_COUNT;
 ScreenType normalizeScreenType(uint8_t raw) {
   switch (raw) {
     case SCREEN_HAM_CLOCK:
-    case SCREEN_HAM_CLOCK2:
+    case SCREEN_HAM_TWOCLOCKS:
     case SCREEN_DX_CLUSTER:
     case SCREEN_SUN_SPOTS:
     case SCREEN_BAND_INFO:
@@ -3459,7 +3462,7 @@ ScreenType normalizeScreenType(uint8_t raw) {
 const char* screenTypeToCodeStr(ScreenType t) {
   switch (t) {
     case SCREEN_HAM_CLOCK: return "hamclock";
-    case SCREEN_HAM_CLOCK2: return "hamclock2";
+    case SCREEN_HAM_TWOCLOCKS: return "hamclock2";
     case SCREEN_DX_CLUSTER: return "dxcluster";
     case SCREEN_APRS_IS: return "aprsis";
     case SCREEN_APRS_RADAR: return "aprsradar";
@@ -3482,7 +3485,7 @@ ScreenType screenCodeToType(const String &code) {
   c.toLowerCase();
   c.trim();
   if (c == "hamclock") return SCREEN_HAM_CLOCK;
-  if (c == "hamclock2") return SCREEN_HAM_CLOCK2;
+  if (c == "hamclock2") return SCREEN_HAM_TWOCLOCKS;
   if (c == "dxcluster") return SCREEN_DX_CLUSTER;
   if (c == "aprsis") return SCREEN_APRS_IS;
   if (c == "aprsradar") return SCREEN_APRS_RADAR;
@@ -8027,7 +8030,7 @@ static void requestUiScreenRedraw(uint8_t pendingScreenId) {
     case SCREEN_HAM_CLOCK:
       uiPendingScreen1Redraw = true;
       break;
-    case SCREEN_HAM_CLOCK2:
+    case SCREEN_HAM_TWOCLOCKS:
       uiPendingScreen1Redraw = true;
       break;
     case SCREEN_DX_CLUSTER:
@@ -8073,8 +8076,8 @@ void updateScreen1() {
   if (currentScreen == SCREEN_HAM_CLOCK && !inMenu && !aprsAlertScreenActive) {
     requestUiScreenRedraw(SCREEN_HAM_CLOCK);
   }
-  if (currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
-    requestUiScreenRedraw(SCREEN_HAM_CLOCK2);
+  if (currentScreen == SCREEN_HAM_TWOCLOCKS && !inMenu && !aprsAlertScreenActive) {
+    requestUiScreenRedraw(SCREEN_HAM_TWOCLOCKS);
   }
 }
 #endif
@@ -13405,8 +13408,8 @@ void uiTaskLoop(void *parameter) {
       if (pendingScreen1 && currentScreen == SCREEN_HAM_CLOCK && !inMenu && !aprsAlertScreenActive) {
         drawScreen(SCREEN_HAM_CLOCK);
       }
-      if (pendingScreen1 && currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
-        drawScreen(SCREEN_HAM_CLOCK2);
+      if (pendingScreen1 && currentScreen == SCREEN_HAM_TWOCLOCKS && !inMenu && !aprsAlertScreenActive) {
+        drawScreen(SCREEN_HAM_TWOCLOCKS);
       }
       if (pendingScreen2 && currentScreen == SCREEN_DX_CLUSTER && !inMenu && !aprsAlertScreenActive) {
         drawScreen(SCREEN_DX_CLUSTER);
@@ -13459,12 +13462,12 @@ void uiTaskLoop(void *parameter) {
         updateScreen1Date();
       }
 
-      if (tftInitialized && currentScreen == SCREEN_HAM_CLOCK2 && !inMenu && !aprsAlertScreenActive) {
+      if (tftInitialized && currentScreen == SCREEN_HAM_TWOCLOCKS && !inMenu && !aprsAlertScreenActive) {
         if (now - lastScreen1UpdateMs > 1000) {
-          updateScreen1Clock2();
+          updateScreenTwoClocks();
           lastScreen1UpdateMs = now;
         }
-        updateScreen1Header2();
+        updateScreenHeadForTwoClocks();
         //updateScreen1Date();
       }
 
