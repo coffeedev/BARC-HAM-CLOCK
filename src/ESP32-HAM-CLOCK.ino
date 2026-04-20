@@ -104,6 +104,10 @@ TFT_eSPI tft = TFT_eSPI();
 #define TFT_BL 21  // Backlight pin (GPIO21 dla ESP32-2432S028)
 #endif
 
+#ifndef TFT_LDR
+#define TFT_LDR 34  // LDR (GPIO21 for ESP32-2432S028)
+#endif
+
 #define TFT_BL_PIN TFT_BL
 
 #define BACKLIGHT_PWM_CHANNEL 0
@@ -201,6 +205,7 @@ ScreenType screenOrder[SCREEN_PAGE_COUNT] = {
 ScreenType currentScreen = SCREEN_OFF;  // Set after loading preferences
 bool inMenu = false;    // Are we in an internal page menu?
 int menuOption = 0;     // Current menu option (if inMenu == true)
+int tftLDR_value = 0 ; 
 const int DEFAULT_TFT_SWITCH_TIME_SEC = 30;
 bool tftAutoSwitchEnabled = false;
 int tftAutoSwitchTimeSec = DEFAULT_TFT_SWITCH_TIME_SEC;
@@ -13644,6 +13649,7 @@ void setup() {
   applyTftRotation();
   applyTouchRotation();
   setBacklightPercent(backlightPercent);
+  
 #endif
   
   bootLogLine("WIFI starting...");
@@ -13668,6 +13674,7 @@ void setup() {
   
   bootLogLine("Starting web server...");
   setupWebServer();
+  pinMode(TFT_LDR, INPUT); // ENABLE LDR
   yield();
   
   bootLogLine("System ready!");
@@ -13798,6 +13805,40 @@ void handleDisplaySleep()
   }
 }
 
+void readLDR()
+{
+  //tftLDR_value = analogRead(TFT_LDR); // Read light level
+  long sum = 0;
+  for (int i = 0; i < 10; i++) {
+    sum += analogRead(TFT_LDR);
+    delay(5);
+  }
+  tftLDR_value = sum / 10;
+
+  Serial.print("LDR Value: ");
+  Serial.println(tftLDR_value);
+}
+
+void updateDisplayfromLDR()
+{
+
+  static unsigned long lastLDR_Read = 0;
+  unsigned long now = millis();
+  if (lastLDR_Read != 0 && (now - lastLDR_Read) < 1000L) {
+    return;
+  }
+
+  readLDR() ;
+  int ldrRaw = constrain(tftLDR_value, 0, 1000);
+
+  int brightnessPercent = map(ldrRaw, 0, 1000, 100, 0);
+  brightnessPercent = constrain(brightnessPercent, 0, 100);
+  Serial.print("brightnessPercent: ");
+  Serial.println(brightnessPercent);
+  setBacklightPercent2(brightnessPercent) ;
+  lastLDR_Read = now ;
+}
+
 void loop() {
   static unsigned long loopCounter = 0;
   static unsigned long lastLoopPrint = 0;
@@ -13855,6 +13896,8 @@ void loop() {
   }
 
   updateStatusRgbLed();
+  //Need more work. Disabling it for now #VU3GWN: 20260420
+  //updateDisplayfromLDR() ;
 
   // In AP mode, periodically attempt a safe return to STA mode.
   retryWiFiFromAPIfDue(now);
