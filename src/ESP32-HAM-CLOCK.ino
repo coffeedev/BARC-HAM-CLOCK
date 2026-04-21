@@ -3,6 +3,11 @@
  * Original author SP3KON
  * Modifications by VU3GWN
  * 
+# New features in v1.9.0
+1. Cleaned up APRS time issues
+2. Fixed Local/UTC date issue
+3. General clean up
+
 # New features in v1.8.0
 1. Removed seconds in Local/UTC time
 2. More clean up
@@ -797,35 +802,35 @@ static inline void unlockHamalertSpots() {
   }
 }
 
-// Formatuje czas spotu do postaci "HH:MM" niezależnie od wejściowego formatu
+// Formats the spot time to "HH:MM" format, regardless of the input format
 String formatSpotUtc(String raw) {
-  raw.trim();
+    raw.trim(); 
 
-  // Obsługa ISO 8601 (np. 2024-12-12T12:34Z)
-  int tPos = raw.indexOf('T');
-  if (tPos >= 0 && (tPos + 5) <= (int)raw.length()) {
-    raw = raw.substring(tPos + 1);
-  }
+    // Handle ISO 8601 format (e.g., 2024-12-12T12:34Z)
+    int tPos = raw.indexOf('T'); 
+    if (tPos >= 0 && (tPos + 5) <= (int)raw.length()) {
+      raw = raw.substring(tPos + 1); 
+    }
 
-  // Usuń ewentualne końcowe "Z"
-  if (raw.endsWith("Z") || raw.endsWith("z")) {
-    raw.remove(raw.length() - 1);
-  }
+    // Remove any trailing "Z"
+    if (raw.endsWith("Z") || raw.endsWith("z")) {
+      raw.remove(raw.length() - 1); 
+    }
 
-  // Jeżeli już jest dwukropek, przytnij do HH:MM
-  if (raw.length() >= 5 && raw.charAt(2) == ':') {
-    return raw.substring(0, 5);
-  }
+    // If a colon is already present, trim to HH:MM
+    if (raw.length() >= 5 && raw.charAt(2) == ':') {
+      return raw.substring(0, 5); 
+    }
 
-  // Brak dwukropka: próbuj wstawić między HH a MM (np. "1234" -> "12:34")
-  if (raw.length() >= 4) {
-    return raw.substring(0, 2) + ":" + raw.substring(2, 4);
-  }
+    // No colon: attempt to insert one between HH and MM (e.g., "1234" -> "12:34")
+    if (raw.length() >= 4) {
+      return raw.substring(0, 2) + ":" + raw.substring(2, 4); 
+    }
 
-  // Awaryjnie: tylko godzina -> dodaj ":00"
-  if (raw.length() >= 2) {
-    return raw.substring(0, 2) + ":00";
-  }
+    // Fallback: hour only -> append ":00"
+    if (raw.length() >= 2) {
+      return raw.substring(0, 2) + ":00"; 
+    }
 
   return raw;
 }
@@ -1157,7 +1162,7 @@ void drawWelcomeScreenYellow() {
   String lines[] = {
     " ",
     "BARC-HAM-CLOCK",
-    "version v1.8.0",
+    "version v1.9.0",
     " "
   };
   for (int i = 0; i < 4; i++) {
@@ -1540,6 +1545,8 @@ static void prepareMatrixIntro() {
 }
 
 String getUtcTimeString() {
+  setenv("TZ", "UTC0", 1);
+  tzset();
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[9];
@@ -1890,7 +1897,7 @@ void drawHamClock() {
   }
   int labelWidth = (int)strlen(timeLabel) * 6;
   int labelX = frameX + (frameWidth - labelWidth) / 2;
-  tft.setCursor(labelX, 165);
+  tft.setCursor(labelX, 160);
   tft.print(timeLabel);
 
   String dateText;
@@ -5395,12 +5402,12 @@ void updateScreen6Data() {
   tft.setTextColor(TFT_DARKGREY);
   tft.setTextSize(1);
   if (enlarged) {
-    tft.setCursor(5, yPos);   tft.print("TIME");
+    tft.setCursor(5, yPos);   tft.print("UTC");
     tft.setCursor(74, yPos);  tft.print("CALL");
     tft.setCursor(198, yPos); tft.print("KM");
     tft.setCursor(224, yPos); tft.print("FREQ");
   } else {
-    tft.setCursor(5, yPos);   tft.print("TIME");
+    tft.setCursor(5, yPos);   tft.print("UTC");
     tft.setCursor(50, yPos);  tft.print("CALLSIGN");
     tft.setCursor(125, yPos); tft.print("SYMBOL");
     tft.setCursor(200, yPos); tft.print("KM");
@@ -5553,12 +5560,12 @@ void drawAprsIs() {
   tft.setTextColor(TFT_DARKGREY);
   tft.setTextSize(1);
   if (enlarged) {
-    tft.setCursor(5, yPos);   tft.print("TIME");
+    tft.setCursor(5, yPos);   tft.print("UTC");
     tft.setCursor(74, yPos);  tft.print("CALL");
     tft.setCursor(198, yPos); tft.print("KM");
     tft.setCursor(224, yPos); tft.print("FREQ");
   } else {
-    tft.setCursor(5, yPos);   tft.print("TIME");
+    tft.setCursor(5, yPos);   tft.print("UTC");
     tft.setCursor(50, yPos);  tft.print("CALLSIGN");
     tft.setCursor(125, yPos); tft.print("SYMBOL");
     tft.setCursor(200, yPos); tft.print("KM");
@@ -10894,7 +10901,7 @@ void sendAPRSLogin() {
   login += getAprsTxCallsignWithSsid();
   login += " pass ";
   login += String(aprsPasscode);
-  login += " vers BARC-HAM-CLOCK v1.8.0";
+  login += " vers BARC-HAM-CLOCK v1.9.0";
   
   Serial.print("[APRS] Sending login: ");
   Serial.println(login);
@@ -10903,12 +10910,12 @@ void sendAPRSLogin() {
   aprsLoginSent = true;
   lastAPRSRxMs = millis();
   
-  // Po zalogowaniu wyĹ›lij filtr
+ // After logging in, send the filter
   delay(500);
   sendAPRSFilter();
 }
 
-// WyĹ›lij komendÄ™ filtra do APRS-IS
+// Send filter command to APRS-IS
 void sendAPRSFilter() {
   if (!aprsConnected || !aprsClient.connected()) {
     Serial.println("[APRS] Unable to send filter – no connection.");
@@ -11334,10 +11341,10 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   station.hasLatLon = false;
   
 
-  // Get time
+  // Get UTC time
   struct tm timeinfo;
-  const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
-  configTime(timezoneOffsetSec, 0, "pool.ntp.org");
+  setenv("TZ", "UTC0", 1);
+  tzset();
   char current[6];
   if (getLocalTime(&timeinfo)) 
   {
@@ -11349,20 +11356,6 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   {
      station.time = "--:--";
   }
-
-    /*
-  // Get UTC time
-  setenv("TZ", "UTC0", 1);
-  tzset();
-  struct tm timeinfo;
-  if (getLocalTime(&timeinfo, 1)) {
-    char timeBuffer[6];
-    strftime(timeBuffer, 6, "%H%MZ", &timeinfo);
-    station.time = String(timeBuffer);
-  } else {
-    station.time = "----Z";
-  }
-    */
   
   // Parse callsign (before >)
   int gtPos = line.indexOf('>');
