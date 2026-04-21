@@ -86,7 +86,7 @@ enum ScreenType : uint8_t {
 #define LOGV_PRINTLN(x) do { if (LOG_VERBOSE) Serial.println(x); } while (0)
 #define LOGV_PRINTF(...) do {} while (0)
 
-// ========== WYŚWIETLACZ TFT (ESP32-2432S028) ==========
+// ========== TFT Display (ESP32-2432S028) ==========
 #ifdef ENABLE_TFT_DISPLAY
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
@@ -608,18 +608,18 @@ struct DXSpot {
   String mode;        // Modulacja (CW, SSB, FT8/FT4)
 };
 
-// Struktura dla stacji APRS
+// Structure for an APRS station
 struct APRSStation {
-  String time;        // Czas UTC (timestamp)
-  String callsign;    // Znak wywoławczy nadawcy
-  String symbol;      // Symbol APRS (raw)
-  String symbolTable; // Table symbol (znak przed /)
-  float lat;          // Szerokość geograficzna
-  float lon;          // Długość geograficzna
-  String comment;     // Komentarz
-  float freqMHz;      // Częstotliwość z komentarza (MHz)
-  float distance;     // Odległość w km (Haversine)
-  bool hasLatLon;     // Czy pozycja jest znana
+    String time; // UTC time (timestamp)
+    String callsign; // Sender's callsign
+    String symbol; // APRS symbol (raw)
+    String symbolTable; // Symbol table (character preceding /)
+    float lat; // Latitude
+    float lon; // Longitude
+    String comment; // Comment
+    float freqMHz; // Frequency extracted from comment (MHz)
+    float distance; // Distance in km (Haversine)
+    bool hasLatLon; // Whether position is known
 };
 
 // ========== ZMIENNE GLOBALNE ==========
@@ -5301,8 +5301,8 @@ void updateScreen6Data() {
 
         tableSprite->setTextColor(TFT_LIGHTGREY);
         tableSprite->setCursor(5, yPos);
-        String timeStr = formatAprsTimeWithTimezone(station.time);
-        tableSprite->print(timeStr);
+        //String timeStr = formatAprsTimeWithTimezone(station.time);
+        tableSprite->print(station.time);
 
         tableSprite->setTextColor(getAprsCallsignColorForEnlarged(station));
         tableSprite->setCursor(74, yPos);
@@ -5336,8 +5336,8 @@ void updateScreen6Data() {
 
         tableSprite->setTextColor(TFT_LIGHTGREY);
         tableSprite->setCursor(5, yPos);
-        String timeStr = formatAprsTimeWithTimezone(station.time);
-        tableSprite->print(timeStr);
+        //String timeStr = formatAprsTimeWithTimezone(station.time);
+        tableSprite->print(station.time);
 
         tableSprite->setTextColor(TFT_WHITE);
         tableSprite->setCursor(50, yPos);
@@ -5395,12 +5395,12 @@ void updateScreen6Data() {
   tft.setTextColor(TFT_DARKGREY);
   tft.setTextSize(1);
   if (enlarged) {
-    tft.setCursor(5, yPos);   tft.print("UTC");
+    tft.setCursor(5, yPos);   tft.print("TIME");
     tft.setCursor(74, yPos);  tft.print("CALL");
     tft.setCursor(198, yPos); tft.print("KM");
     tft.setCursor(224, yPos); tft.print("FREQ");
   } else {
-    tft.setCursor(5, yPos);   tft.print("UTC");
+    tft.setCursor(5, yPos);   tft.print("TIME");
     tft.setCursor(50, yPos);  tft.print("CALLSIGN");
     tft.setCursor(125, yPos); tft.print("SYMBOL");
     tft.setCursor(200, yPos); tft.print("KM");
@@ -5427,8 +5427,8 @@ void updateScreen6Data() {
 
       tft.setTextColor(TFT_LIGHTGREY);
       tft.setCursor(5, yPos);
-      String timeStr = formatAprsTimeWithTimezone(station.time);
-      tft.print(timeStr);
+      //String timeStr = formatAprsTimeWithTimezone(station.time);
+      tft.print(station.time);
 
       tft.setTextColor(getAprsCallsignColorForEnlarged(station));
       tft.setCursor(74, yPos);
@@ -5462,8 +5462,8 @@ void updateScreen6Data() {
 
       tft.setTextColor(TFT_LIGHTGREY);
       tft.setCursor(5, yPos);
-      String timeStr = formatAprsTimeWithTimezone(station.time);
-      tft.print(timeStr);
+      //String timeStr = formatAprsTimeWithTimezone(station.time);
+      tft.print(station.time);
 
       tft.setTextColor(TFT_WHITE);
       tft.setCursor(50, yPos);
@@ -5511,6 +5511,17 @@ void updateScreen6Data() {
   }
 }
 
+String getCurrentTime()
+{
+  struct tm timeinfo;
+  char timeBuffer[6];
+  if (getTimeWithTimezone(&timeinfo)) {
+    strftime(timeBuffer, 6, "%H:%M", &timeinfo);
+  }
+
+  return String(timeBuffer) ;
+}
+
 void drawAprsIs() {
   screen6ViewMode = APRS_VIEW_LIST;
   tft.fillScreen(TFT_BLACK);
@@ -5528,15 +5539,13 @@ void drawAprsIs() {
   tft.print("APRS-IS");
   tft.setCursor(35+1, 8);
   tft.print("APRS-IS");
-  
-  struct tm timeinfo;
-  if (getTimeWithTimezone(&timeinfo)) {
-    char timeBuffer[6];
-    strftime(timeBuffer, 6, "%H:%M", &timeinfo);
-    int timeWidth = strlen(timeBuffer) * 12;
-    tft.setCursor(320 - timeWidth - 4, 8);
-    tft.print(timeBuffer);
-  }
+
+
+  String currentTime = getCurrentTime() ;
+  int timeWidth = currentTime.length() * 12 ;
+  //int timeWidth = strlen(timeBuffer) * 12;
+  tft.setCursor(320 - timeWidth - 4, 8);
+  tft.print(currentTime);
 
   // 2. TABLE HEADERS
   int yPos = 40;
@@ -5544,12 +5553,12 @@ void drawAprsIs() {
   tft.setTextColor(TFT_DARKGREY);
   tft.setTextSize(1);
   if (enlarged) {
-    tft.setCursor(5, yPos);   tft.print("UTC");
+    tft.setCursor(5, yPos);   tft.print("TIME");
     tft.setCursor(74, yPos);  tft.print("CALL");
     tft.setCursor(198, yPos); tft.print("KM");
     tft.setCursor(224, yPos); tft.print("FREQ");
   } else {
-    tft.setCursor(5, yPos);   tft.print("UTC");
+    tft.setCursor(5, yPos);   tft.print("TIME");
     tft.setCursor(50, yPos);  tft.print("CALLSIGN");
     tft.setCursor(125, yPos); tft.print("SYMBOL");
     tft.setCursor(200, yPos); tft.print("KM");
@@ -5571,8 +5580,8 @@ void drawAprsIs() {
       tft.setTextSize(2);
       tft.setTextColor(TFT_LIGHTGREY);
       tft.setCursor(5, yPos);
-      String timeStr = formatAprsTimeWithTimezone(station.time);
-      tft.print(timeStr);
+      //String timeStr = formatAprsTimeWithTimezone(station.time);
+      tft.print(station.time);
 
       tft.setTextColor(getAprsCallsignColorForEnlarged(station));
       tft.setCursor(74, yPos);
@@ -5603,8 +5612,9 @@ void drawAprsIs() {
       tft.setTextSize(1);
       tft.setTextColor(TFT_LIGHTGREY);
       tft.setCursor(5, yPos);
-      String timeStr = formatAprsTimeWithTimezone(station.time);
-      tft.print(timeStr);
+      //String timeStr = formatAprsTimeWithTimezone(station.time);
+      Serial.println("[APRS] time :" + station.time) ;
+      tft.print(station.time);
 
       tft.setTextColor(TFT_WHITE);
       tft.setCursor(50, yPos);
@@ -11323,7 +11333,27 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   station.distance = 0.0f;
   station.hasLatLon = false;
   
+
+  // Get time
+  struct tm timeinfo;
+  const long timezoneOffsetSec = (long)(timezoneHours * 3600.0f);
+  configTime(timezoneOffsetSec, 0, "pool.ntp.org");
+  char current[6];
+  if (getLocalTime(&timeinfo)) 
+  {
+    strftime(current, 6, "%H:%M", &timeinfo);
+    station.time = String(current) ;
+    Serial.println("[APRS] setting time: " + station.time) ;
+  }
+  else
+  {
+     station.time = "--:--";
+  }
+
+    /*
   // Get UTC time
+  setenv("TZ", "UTC0", 1);
+  tzset();
   struct tm timeinfo;
   if (getLocalTime(&timeinfo, 1)) {
     char timeBuffer[6];
@@ -11332,6 +11362,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   } else {
     station.time = "----Z";
   }
+    */
   
   // Parse callsign (before >)
   int gtPos = line.indexOf('>');
@@ -11507,7 +11538,7 @@ bool parseAPRSFrame(String line, APRSStation &station) {
           station.symbolTable = line.substring(latStart + 8, latStart + 9);
         }
         
-        // DĹ‚ugoĹ›Ä‡ geograficzna zaczyna siÄ™ po symbolu table
+        // Longitude begins after the table symbol
         int lonStart = latStart + 9;
         if (lonStart + 7 < line.length()) {
           String lonStr = line.substring(lonStart, lonStart + 8);
@@ -11536,10 +11567,10 @@ bool parseAPRSFrame(String line, APRSStation &station) {
   // Ustaw flagÄ™ poprawnoĹ›ci pozycji tylko jeĹ›li mamy lat i lon
   station.hasLatLon = (latOk && lonOk);
 
-  // WyciÄ…gnij komentarz (po symbolu i pozycji)
-  // Format z "/": !5202.40N/01655.12E#symbol/komentarz lub !5202.40N/01655.12E#symbol komentarz
-  // Format bez "/": DDMM.mmNsymbolDDDMM.mmE&komentarz
-  // Format z ";": ;komentarz_przed*HHMMzDDMM.mmNsymbolDDDMM.mmE&komentarz_po
+  // Extract comment (following the symbol and position)
+  // Format with "/": !5202.40N/01655.12E#symbol/comment or !5202.40N/01655.12E#symbol comment
+  // Format without "/": DDMM.mmNsymbolDDDMM.mmE&comment
+  // Format with ";": ;pre-comment*HHMMzDDMM.mmNsymbolDDDMM.mmE&post-comment
   int colonPos = line.indexOf(':');
   if (colonPos >= 0 && colonPos + 1 < line.length()) {
     String fullComment = "";
